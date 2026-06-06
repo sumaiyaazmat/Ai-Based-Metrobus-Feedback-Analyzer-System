@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metro Bus — Passenger Portal</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    /* ── Bell Notification ─────────────────────────────── */
+    .bell-wrap { position: relative; }
+    .bell-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--bg2); border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all .2s; color: var(--muted);
+      position: relative;
+    }
+    .bell-btn:hover { background: var(--primary-l); border-color: var(--primary); color: var(--primary); }
+    .bell-btn svg { width: 18px; height: 18px; }
+    .bell-badge {
+      position: absolute; top: -4px; right: -4px;
+      min-width: 18px; height: 18px; border-radius: 50%;
+      background: var(--danger); color: white;
+      font-size: 10px; font-weight: 700; line-height: 18px;
+      text-align: center; padding: 0 4px;
+      border: 2px solid white; display: none;
+      animation: bellPop .4s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes bellPop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+    @keyframes bellRing {
+      0%,100%{transform:rotate(0)} 10%,50%{transform:rotate(14deg)}
+      20%,60%{transform:rotate(-14deg)} 30%,70%{transform:rotate(8deg)} 40%,80%{transform:rotate(-8deg)}
+    }
+    .bell-btn.ringing svg { animation: bellRing .8s ease; }
+
+    .notif-panel {
+      position: absolute; top: calc(100% + 10px); right: 0;
+      width: 360px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow-lg); z-index: 500;
+      display: none; overflow: hidden;
+    }
+    .notif-panel.open { display: block; animation: slideDown .2s ease; }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .notif-head {
+      padding: 14px 16px; background: var(--primary);
+      color: white; display: flex; align-items: center; justify-content: space-between;
+    }
+    .notif-head h4 { font-size: 13px; font-weight: 700; margin: 0; }
+    .notif-head span { font-size: 11px; opacity: .75; }
+    .notif-body { padding: 14px; }
+    .notif-search { display: flex; gap: 8px; margin-bottom: 12px; }
+    .notif-search input {
+      flex: 1; padding: 9px 12px; background: var(--bg2);
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 13px; color: var(--text); font-family: 'DM Sans',sans-serif;
+      outline: none; transition: all .2s;
+    }
+    .notif-search input:focus { border-color: var(--primary); background: white; }
+    .notif-result { min-height: 60px; }
+    .notif-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 9px; padding: 12px; font-size: 12px;
+    }
+    .notif-card .nc-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
+    }
+    .notif-card .nc-id {
+      font-family: monospace; font-weight: 700;
+      color: var(--primary); font-size: 13px;
+    }
+    .notif-note {
+      background: var(--accent-l); border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0; padding: 8px 10px; margin-top: 6px;
+      font-size: 12px; color: var(--text2); line-height: 1.5;
+    }
+    .notif-note .nn-by { font-size: 10px; color: var(--accent); font-weight: 700; margin-bottom: 3px; }
+    .notif-empty { text-align: center; color: var(--muted); font-size: 12px; padding: 16px 0; }
+    .notif-footer { padding: 10px 14px; border-top: 1px solid var(--border); text-align: center; }
+    .notif-footer span { font-size: 11px; color: var(--muted); }
+
+    /* ── Announcements Slider ───────────────────────────── */
+    .announcements-section {
+      background: white; border-bottom: 2px solid var(--border);
+      padding: 14px 0;
+    }
+    .ann-inner {
+      max-width: 1160px; margin: 0 auto; padding: 0 24px;
+    }
+    .ann-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .ann-header h3 {
+      font-family: 'Inter',sans-serif; font-size: 13px; font-weight: 700;
+      color: var(--text); display: flex; align-items: center; gap: 8px;
+    }
+    .ann-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(46,125,50,.2);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 3px rgba(46,125,50,.2)} 50%{box-shadow:0 0 0 6px rgba(46,125,50,.05)} }
+    .ann-header .ann-label {
+      font-size: 11px; color: var(--success); font-weight: 600;
+      background: var(--success-l); padding: 3px 10px; border-radius: 50px;
+      border: 1px solid #A5D6A7;
+    }
+    .ann-track-wrap { overflow: hidden; position: relative; }
+    .ann-track {
+      display: flex; gap: 12px;
+      transition: transform .45s cubic-bezier(.4,0,.2,1);
+    }
+    .ann-card {
+      min-width: 260px; background: var(--bg2);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; cursor: pointer; flex-shrink: 0;
+      transition: all .2s; position: relative; overflow: hidden;
+    }
+    .ann-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .ann-card.c-blue::before   { background: var(--primary); }
+    .ann-card.c-orange::before { background: var(--secondary); }
+    .ann-card.c-green::before  { background: var(--success); }
+    .ann-card.c-teal::before   { background: var(--accent); }
+    .ann-card.c-purple::before { background: #7B1FA2; }
+    .ann-card:hover { border-color: var(--primary); box-shadow: var(--shadow); transform: translateY(-2px); }
+    .ann-tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      letter-spacing: .4px; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;
+    }
+    .tag-new     { background: var(--primary-l); color: var(--primary); }
+    .tag-route   { background: var(--secondary-l); color: var(--secondary); }
+    .tag-service { background: var(--success-l); color: var(--success); }
+    .tag-update  { background: var(--accent-l); color: var(--accent); }
+    .tag-tender  { background: #F3E5F5; color: #7B1FA2; }
+    .ann-card h4 {
+      font-family: 'Inter',sans-serif; font-size: 13px; font-weight: 700;
+      color: var(--text); margin-bottom: 4px; line-height: 1.3;
+    }
+    .ann-card p { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+    .ann-card .ann-date { font-size: 10px; color: var(--muted2); margin-top: 8px; font-weight: 500; }
+    .ann-nav { display: flex; gap: 6px; align-items: center; }
+    .ann-nav button {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--bg2); border: 1.5px solid var(--border);
+      color: var(--text2); font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .ann-nav button:hover { background: var(--primary); border-color: var(--primary); color: white; }
+    .ann-dots { display: flex; gap: 5px; align-items: center; margin-top: 10px; justify-content: center; }
+    .ann-dot-btn {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border2); transition: all .2s; cursor: pointer; border: none;
+    }
+    .ann-dot-btn.active { width: 20px; border-radius: 3px; background: var(--primary); }
+  </style>
+</head>
+<body>
+
+<!-- ── Top Navigation ──────────────────────────────────────────────── -->
+<nav class="topbar">
+  <a href="/" class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="white"><path d="M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>
+    </div>
+    Metro<span>Bus</span>
+  </a>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="/" class="nav-pill active">Portal</a>
+    <a href="/admin" class="nav-pill">Admin</a>
+    <a href="/report" class="nav-pill" target="_blank">Report</a>
+
+    <!-- Bell Icon -->
+    <div class="bell-wrap" id="bell-wrap">
+      <button class="bell-btn" id="bell-btn" onclick="toggleNotifPanel()" title="Check admin reply">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+        </svg>
+        <div class="bell-badge" id="bell-badge"></div>
+      </button>
+      <!-- Notification Panel -->
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-head">
+          <h4>Admin Replies</h4>
+          <span>Enter your Tracking ID</span>
+        </div>
+        <div class="notif-body">
+          <div class="notif-search">
+            <input type="text" id="notif-input" placeholder="e.g. MB-0042"
+              oninput="this.value=this.value.toUpperCase()"
+              onkeydown="if(event.key==='Enter') checkNotification()">
+            <button class="btn btn-primary" style="padding:9px 14px;font-size:12px" onclick="checkNotification()">Check</button>
+          </div>
+          <div class="notif-result" id="notif-result">
+            <div class="notif-empty">Enter your Tracking ID to see if the admin has replied to your complaint.</div>
+          </div>
+        </div>
+        <div class="notif-footer">
+          <span>Tracking IDs are shown after feedback submission</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero Banner ─────────────────────────────────────────────────── -->
+<div class="hero-banner">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-badge">
+        <span>&#9679;</span> Punjab Mass Transit Authority
+      </div>
+      <h1 class="hero-title">Metro<em>Bus</em> Passenger<br>Feedback Portal</h1>
+      <p class="hero-subtitle">Your feedback directly improves service quality across all routes. Submit complaints, suggestions, and compliments — every voice counts.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="h-num">5</div><div class="h-lbl">Routes</div></div>
+        <div class="hero-stat"><div class="h-num">24h</div><div class="h-lbl">Response</div></div>
+        <div class="hero-stat"><div class="h-num">AI</div><div class="h-lbl">Powered</div></div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <svg class="bus-svg" viewBox="0 0 220 130" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="20" width="200" height="85" rx="10" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+        <rect x="20" y="30" width="45" height="35" rx="4" fill="rgba(255,255,255,0.3)"/>
+        <rect x="75" y="30" width="45" height="35" rx="4" fill="rgba(255,255,255,0.3)"/>
+        <rect x="130" y="30" width="45" height="35" rx="4" fill="rgba(255,255,255,0.3)"/>
+        <rect x="10" y="95" width="200" height="8" rx="4" fill="rgba(255,109,0,0.6)"/>
+        <circle cx="45" cy="115" r="10" fill="rgba(255,255,255,0.3)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+        <circle cx="45" cy="115" r="4" fill="rgba(255,255,255,0.6)"/>
+        <circle cx="175" cy="115" r="10" fill="rgba(255,255,255,0.3)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+        <circle cx="175" cy="115" r="4" fill="rgba(255,255,255,0.6)"/>
+        <rect x="20" y="75" width="60" height="16" rx="3" fill="rgba(255,109,0,0.5)"/>
+        <text x="50" y="87" text-anchor="middle" fill="white" font-size="8" font-family="Inter,sans-serif" font-weight="700">LAHORE</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ── Government Announcements Slider ────────────────────────────── -->
+<div class="announcements-section">
+  <div class="ann-inner">
+    <div class="ann-header">
+      <h3>
+        <span class="ann-dot"></span>
+        Government Announcements &amp; New Routes
+      </h3>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="ann-label">Live Updates</span>
+        <div class="ann-nav">
+          <button onclick="slideAnn(-1)" title="Previous">&#8592;</button>
+          <button onclick="slideAnn(1)" title="Next">&#8594;</button>
+        </div>
+      </div>
+    </div>
+    <div class="ann-track-wrap">
+      <div class="ann-track" id="ann-track">
+
+        <div class="ann-card c-blue">
+          <span class="ann-tag tag-new">New Route</span>
+          <h4>R30: Lahore Ring Road — Airport Expressway</h4>
+          <p>New high-capacity route connecting Thokar Niaz Baig to Allama Iqbal International Airport via M2 motorway interchange.</p>
+          <div class="ann-date">Launching: 1 August 2026 &nbsp;|&nbsp; Frequency: every 12 min (peak)</div>
+        </div>
+
+        <div class="ann-card c-orange">
+          <span class="ann-tag tag-route">Route Extension</span>
+          <h4>R10 Extended: Gulberg to DHA Phase 6</h4>
+          <p>Route R10 (Saddar–Gulberg) is being extended by 8.4 km southward to serve DHA Phase 6 and Bahria Town residents.</p>
+          <div class="ann-date">From: 15 July 2026 &nbsp;|&nbsp; 6 new stops added</div>
+        </div>
+
+        <div class="ann-card c-green">
+          <span class="ann-tag tag-service">Service Upgrade</span>
+          <h4>Air-Conditioned Fleet Expansion — 40 New Buses</h4>
+          <p>Punjab Mass Transit Authority has procured 40 new fully air-conditioned buses with CCTV and real-time GPS tracking for all routes.</p>
+          <div class="ann-date">Deployment: July–September 2026 &nbsp;|&nbsp; All 5 routes covered</div>
+        </div>
+
+        <div class="ann-card c-teal">
+          <span class="ann-tag tag-update">Timing Update</span>
+          <h4>Extended Night Service — R12 and R20</h4>
+          <p>Night service on routes R12 (Johar Town–Airport) and R20 (Cantt–Shalimar) extended to 1:00 AM to support airport shift workers.</p>
+          <div class="ann-date">Effective: 1 July 2026 &nbsp;|&nbsp; Last bus at 01:00 AM</div>
+        </div>
+
+        <div class="ann-card c-purple">
+          <span class="ann-tag tag-tender">Government Initiative</span>
+          <h4>Smart Card Payment System — Citywide Rollout</h4>
+          <p>PMTA is introducing tap-and-go smart card payments on all Metro Bus routes, replacing cash transactions for faster boarding.</p>
+          <div class="ann-date">Pilot: R15 from August 2026 &nbsp;|&nbsp; Full rollout: Oct 2026</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="ann-dots" id="ann-dots"></div>
+  </div>
+</div>
+
+<!-- ── Main Content ────────────────────────────────────────────────── -->
+<div class="page-wrap">
+  <div class="grid-2">
+
+    <!-- ── Feedback Form ── -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon-dot"></div>
+        Submit Feedback
+      </div>
+      <div id="feedback-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="f-name" placeholder="e.g. Ahmad Raza">
+          </div>
+          <div class="form-group">
+            <label>CNIC Number</label>
+            <input type="text" id="f-cnic" placeholder="35202-1234567-1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Bus Route</label>
+          <select id="f-route">
+            <option value="">Select Your Route</option>
+            <option value="R10">R10 — Saddar to Gulberg</option>
+            <option value="R12">R12 — Johar Town to Airport</option>
+            <option value="R15">R15 — DHA to Model Town</option>
+            <option value="R20">R20 — Cantt to Shalimar</option>
+            <option value="R25">R25 — Iqbal Town to Shahdara</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Your Feedback</label>
+          <textarea id="f-text" placeholder="Describe your experience, complaint, or suggestion clearly..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-full" id="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+        <div id="form-error" style="color:var(--danger);font-size:12px;margin-top:8px;display:none;padding:8px 12px;background:var(--danger-l);border-radius:6px;"></div>
+      </div>
+
+      <!-- Success State -->
+      <div class="success-wrap" id="success-wrap">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--success-l);border:3px solid var(--success);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h3>Feedback Submitted</h3>
+        <p>Your complaint has been received and analyzed by our AI system.</p>
+        <div class="tracking-badge" id="tracking-id">MB-0000</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px">Save this ID — click the bell icon to check admin replies</p>
+        <div id="ai-preview" style="margin-top:14px;text-align:left;background:var(--bg2);border-radius:8px;padding:14px;font-size:13px;line-height:1.7;border:1px solid var(--border);"></div>
+        <button class="btn" style="margin-top:14px" onclick="resetForm()">Submit Another Feedback</button>
+      </div>
+    </div>
+
+    <!-- ── AI Chatbot ── -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon-dot" style="background:var(--accent);box-shadow:0 0 6px rgba(2,136,209,0.4)"></div>
+        AI Assistant
+        <span id="api-status-dot" style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:50px;background:var(--bg2);color:var(--muted);border:1px solid var(--border)">checking...</span>
+      </div>
+      <div class="quick-chips">
+        <button class="chip" onclick="quickMsg('How do I submit a complaint?')">How to submit?</button>
+        <button class="chip" onclick="quickMsg('Which route goes to Saddar?')">Route to Saddar</button>
+        <button class="chip" onclick="quickMsg('How can I track my complaint?')">Track complaint</button>
+        <button class="chip" onclick="quickMsg('What are bus timings?')">Bus timings</button>
+        <button class="chip" onclick="quickMsg('What is the new R30 route?')">New R30 route</button>
+      </div>
+      <div class="chat-box" id="chat-box">
+        <div class="msg msg-bot">
+          <div class="msg-name">AI Assistant</div>
+          <div class="msg-bubble">Welcome to the Metro Bus Passenger Portal. I am your AI Assistant powered by Claude. I can help you with complaints, routes, timings, new announcements, and more. How can I assist you today?</div>
+        </div>
+      </div>
+      <div class="chat-row">
+        <input type="text" id="chat-input" placeholder="Ask about metro bus services..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn btn-teal" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Close panel when clicking outside ──────────────────────────── -->
+<div id="overlay-close" style="position:fixed;inset:0;z-index:499;display:none;" onclick="closeNotifPanel()"></div>
+
+<script>
+/* ─── Announcement Slider ─────────────────────────────────────────── */
+var annIdx = 0;
+var annCards = document.querySelectorAll('.ann-card');
+var annTotal = annCards.length;
+var annVisible = Math.min(3, annTotal);
+var annMax = annTotal - annVisible;
+
+function buildDots() {
+  var dc = document.getElementById('ann-dots');
+  dc.innerHTML = '';
+  for (var i = 0; i <= annMax; i++) {
+    var b = document.createElement('button');
+    b.className = 'ann-dot-btn' + (i === 0 ? ' active' : '');
+    b.setAttribute('data-i', i);
+    b.onclick = function() { goAnn(parseInt(this.getAttribute('data-i'))); };
+    dc.appendChild(b);
+  }
+}
+
+function goAnn(i) {
+  annIdx = Math.max(0, Math.min(i, annMax));
+  var cardW = annCards[0].offsetWidth + 12;
+  document.getElementById('ann-track').style.transform = 'translateX(-' + (annIdx * cardW) + 'px)';
+  document.querySelectorAll('.ann-dot-btn').forEach(function(b, j) {
+    b.classList.toggle('active', j === annIdx);
+  });
+}
+
+function slideAnn(dir) { goAnn(annIdx + dir); }
+
+window.addEventListener('load', function() {
+  buildDots();
+  setInterval(function() { goAnn((annIdx + 1) > annMax ? 0 : annIdx + 1); }, 5000);
+  checkApiStatus();
+});
+window.addEventListener('resize', buildDots);
+
+/* ─── API Status Check ────────────────────────────────────────────── */
+function checkApiStatus() {
+  fetch('/api/check-api-status')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var dot = document.getElementById('api-status-dot');
+    if (d.api_configured) {
+      dot.textContent = 'Claude API Active';
+      dot.style.background = 'var(--success-l)';
+      dot.style.color = 'var(--success)';
+      dot.style.borderColor = '#A5D6A7';
+    } else {
+      dot.textContent = 'Fallback Mode';
+      dot.style.background = 'var(--warning-l)';
+      dot.style.color = '#B45309';
+      dot.style.borderColor = '#FFE082';
+    }
+  }).catch(function(){ });
+}
+
+/* ─── Bell Notification System ────────────────────────────────────── */
+function toggleNotifPanel() {
+  var panel = document.getElementById('notif-panel');
+  var overlay = document.getElementById('overlay-close');
+  var isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    closeNotifPanel();
+  } else {
+    panel.classList.add('open');
+    overlay.style.display = 'block';
+    document.getElementById('bell-btn').classList.add('ringing');
+    setTimeout(function(){ document.getElementById('bell-btn').classList.remove('ringing'); }, 900);
+    // Auto-fill saved tracking ID
+    var saved = sessionStorage.getItem('mb_tracking_id');
+    if (saved) {
+      document.getElementById('notif-input').value = saved;
+      checkNotification();
+    }
+  }
+}
+
+function closeNotifPanel() {
+  document.getElementById('notif-panel').classList.remove('open');
+  document.getElementById('overlay-close').style.display = 'none';
+}
+
+function checkNotification() {
+  var tid = document.getElementById('notif-input').value.trim().toUpperCase();
+  if (!tid) return;
+  var res = document.getElementById('notif-result');
+  res.innerHTML = '<div class="notif-empty"><span class="loader loader-dark"></span> Looking up...</div>';
+
+  fetch('/api/notifications/' + encodeURIComponent(tid))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (!d.found) {
+      res.innerHTML = '<div class="notif-empty">' + d.message + '</div>';
+      return;
+    }
+    // Status badge colors
+    var stColors = {'Pending':'b-pending','Complete':'b-complete','On Hold':'b-hold'};
+    var stClass = stColors[d.status] || 'b-neu';
+    var html = '<div class="notif-card">' +
+      '<div class="nc-head">' +
+        '<span class="nc-id">' + d.tracking_id + '</span>' +
+        '<span class="badge ' + stClass + '">' + d.status + '</span>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Route: <strong>' + d.route + '</strong> &nbsp;|&nbsp; Submitted: ' + d.date + '</div>';
+
+    if (!d.notes || !d.notes.length) {
+      html += '<div style="font-size:12px;color:var(--muted);padding:8px 0;font-style:italic">No admin reply yet. We will respond within 24 hours.</div>';
+    } else {
+      html += '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">' + d.notes.length + ' Admin Reply' + (d.notes.length > 1 ? 'ies' : '') + '</div>';
+      d.notes.forEach(function(n) {
+        html += '<div class="notif-note"><div class="nn-by">' + n.by + ' &nbsp;—&nbsp; ' + n.timestamp + '</div>' + n.note + '</div>';
+      });
+      // Update bell badge
+      document.getElementById('bell-badge').textContent = d.reply_count;
+      document.getElementById('bell-badge').style.display = 'flex';
+      document.getElementById('bell-badge').style.alignItems = 'center';
+      document.getElementById('bell-badge').style.justifyContent = 'center';
+    }
+    html += '</div>';
+    res.innerHTML = html;
+  })
+  .catch(function(){
+    res.innerHTML = '<div class="notif-empty">Connection error. Please try again.</div>';
+  });
+}
+
+/* ─── Feedback Form ───────────────────────────────────────────────── */
+function showError(msg) {
+  var el = document.getElementById('form-error');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 4000);
+}
+
+function submitFeedback() {
+  var name  = document.getElementById('f-name').value.trim();
+  var cnic  = document.getElementById('f-cnic').value.trim();
+  var route = document.getElementById('f-route').value;
+  var text  = document.getElementById('f-text').value.trim();
+  if (!name)  { showError('Please enter your full name.'); return; }
+  if (!cnic)  { showError('Please enter your CNIC number.'); return; }
+  if (!route) { showError('Please select a bus route.'); return; }
+  if (!text)  { showError('Please write your feedback.'); return; }
+
+  var btn = document.getElementById('submit-btn');
+  btn.innerHTML = '<span class="loader"></span> Analyzing...';
+  btn.disabled = true;
+
+  fetch('/submit', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name:name, cnic:cnic, route:route, feedback:text})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.success) {
+      var tid = data.tracking_id;
+      document.getElementById('tracking-id').textContent = tid;
+      // Save to sessionStorage for bell auto-fill
+      sessionStorage.setItem('mb_tracking_id', tid);
+      // Update bell badge to show "check for replies"
+      document.getElementById('bell-badge').textContent = '!';
+      document.getElementById('bell-badge').style.display = 'flex';
+      document.getElementById('bell-badge').style.alignItems = 'center';
+      document.getElementById('bell-badge').style.justifyContent = 'center';
+      document.getElementById('bell-badge').style.background = 'var(--warning)';
+
+      var a = data.analysis;
+      var qc = a.quality==='Bad'?'b-bad':a.quality==='Excellent'?'b-exc':'b-avg';
+      var sc = a.sentiment==='Negative'?'b-neg':a.sentiment==='Positive'?'b-pos':'b-neu';
+      var ec = 'b-' + a.emotion.toLowerCase();
+      document.getElementById('ai-preview').innerHTML =
+        '<div style="font-weight:700;margin-bottom:8px;color:var(--primary);font-size:12px;text-transform:uppercase;letter-spacing:.5px">AI Analysis Result</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' +
+          '<span class="badge ' + ec + '">' + a.emotion + '</span>' +
+          '<span class="badge ' + qc + '">' + a.quality + '</span>' +
+          '<span class="badge ' + sc + '">' + a.sentiment + '</span>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--text2);line-height:1.6">' + a.summary + '</div>' +
+        '<div style="font-size:12px;margin-top:8px;color:var(--accent);padding:8px 10px;background:var(--accent-l);border-radius:6px;border-left:3px solid var(--accent)">' + a.suggestion + '</div>';
+      document.getElementById('feedback-form').style.display = 'none';
+      document.getElementById('success-wrap').style.display  = 'block';
+    } else {
+      showError('Something went wrong. Please try again.');
+      btn.innerHTML = 'Submit Feedback'; btn.disabled = false;
+    }
+  })
+  .catch(function(){
+    showError('Connection error. Is the server running?');
+    btn.innerHTML = 'Submit Feedback'; btn.disabled = false;
+  });
+}
+
+function resetForm() {
+  ['f-name','f-cnic','f-text'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('f-route').value = '';
+  var btn = document.getElementById('submit-btn');
+  btn.innerHTML = 'Submit Feedback'; btn.disabled = false;
+  document.getElementById('feedback-form').style.display = 'block';
+  document.getElementById('success-wrap').style.display  = 'none';
+}
+
+/* ─── Chatbot ─────────────────────────────────────────────────────── */
+function sendChat() {
+  var input = document.getElementById('chat-input');
+  var msg = input.value.trim();
+  if (!msg) return;
+  addMsg(msg, 'user');
+  input.value = '';
+  var typing = addMsg('Processing your query...', 'bot');
+
+  fetch('/chat', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({message: msg})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    typing.querySelector('.msg-bubble').innerHTML = d.reply.replace(/\n/g,'<br>');
+  })
+  .catch(function(){
+    typing.querySelector('.msg-bubble').innerHTML = 'Unable to connect to the server. Please try again.';
+  });
+}
+
+function quickMsg(msg) {
+  document.getElementById('chat-input').value = msg;
+  sendChat();
+}
+
+function addMsg(text, role) {
+  var box = document.getElementById('chat-box');
+  var div = document.createElement('div');
+  div.className = 'msg msg-' + role;
+  div.innerHTML =
+    '<div class="msg-name">' + (role==='bot'?'AI Assistant':'You') + '</div>' +
+    '<div class="msg-bubble">' + text + '</div>';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+</script>
+</body>
+</html>

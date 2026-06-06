@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Metro Bus — Admin Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .tab-bar{display:flex;gap:4px;margin-bottom:22px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:4px}
+    .tab-btn{flex:1;padding:9px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all .2s}
+    .tab-btn.active{background:var(--primary);color:white;box-shadow:0 3px 10px rgba(13,71,161,0.25)}
+    .tab-btn:hover:not(.active){color:var(--primary);background:var(--primary-l)}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+
+    .filter-bar{display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:8px;margin-bottom:14px;align-items:center}
+    .search-wrap{position:relative}
+    .search-input{padding:9px 14px 9px 36px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:all .2s;width:100%}
+    .search-input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(13,71,161,0.08)}
+    .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+    .flt{padding:8px 12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;transition:all .2s}
+    .flt:focus{border-color:var(--primary)}
+    .sort-btn{padding:8px 12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--text2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s}
+    .sort-btn:hover{border-color:var(--primary);color:var(--primary)}
+    .sort-btn.asc::after{content:' ▲'}.sort-btn.desc::after{content:' ▼'}
+
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:660px;max-height:88vh;overflow-y:auto;padding:28px;position:relative;box-shadow:var(--shadow-lg)}
+    .modal::-webkit-scrollbar{width:4px}.modal::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+    .modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .modal-close:hover{background:var(--danger-l);color:var(--danger);border-color:#FFCDD2}
+    .modal-title{font-family:'Inter',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;color:var(--text)}
+    .modal-id{font-size:12px;color:var(--muted);font-family:monospace;margin-bottom:18px}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .detail-box{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:12px}
+    .detail-box .dlabel{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:600}
+    .detail-box .dval{font-size:13px;font-weight:500;color:var(--text)}
+    .feedback-full{background:var(--bg2);border-radius:9px;padding:14px;font-size:13px;line-height:1.7;color:var(--text2);margin-bottom:16px;border-left:3px solid var(--secondary)}
+    .tags-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+    .notes-title{font-size:11px;font-weight:700;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    .note-item{background:var(--accent-l);border:1px solid #B3DDF2;border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px}
+    .note-meta{font-size:11px;color:var(--accent);margin-bottom:4px;font-weight:600}
+    .note-text{color:var(--text2);line-height:1.5}
+    .no-notes{color:var(--muted2);font-size:13px;font-style:italic;margin-bottom:12px}
+    .note-form{display:flex;gap:8px;margin-top:10px}
+    .note-form textarea{flex:1;padding:9px 12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:none;outline:none;min-height:60px;transition:all .2s}
+    .note-form textarea:focus{border-color:var(--accent);background:#fff}
+    .status-row{display:flex;gap:8px;align-items:center;margin-bottom:18px;padding:12px;background:var(--bg2);border-radius:9px;border:1px solid var(--border)}
+    .status-row label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+    .route-table{width:100%;border-collapse:collapse;font-size:13px}
+    .route-table th{text-align:left;padding:10px 14px;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid var(--border);background:var(--bg2)}
+    .route-table td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text2)}
+    .route-table tr:last-child td{border-bottom:none}
+    .route-table tr:hover td{background:var(--primary-l)}
+    .score-bar-wrap{display:flex;align-items:center;gap:10px}
+    .score-bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+    .score-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+    .score-val{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;min-width:28px}
+    .health-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+    .h-green{background:#2E7D32;box-shadow:0 0 5px #2E7D32}.h-yellow{background:#F9A825;box-shadow:0 0 5px #F9A825}.h-red{background:#C62828;box-shadow:0 0 5px #C62828}
+    .rank-num{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--muted);min-width:28px}
+    .rank-num.top{color:var(--warning)}
+
+    .results-info{font-size:12px;color:var(--muted);margin-bottom:10px}
+    .results-info span{color:var(--primary);font-weight:600}
+
+    .user-pill{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:50px;font-size:13px}
+    .user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white}
+    .logout-link{color:var(--muted);font-size:12px;text-decoration:none;padding:5px 10px;border-radius:6px;transition:all .2s;border:1px solid transparent}
+    .logout-link:hover{color:var(--danger);background:var(--danger-l);border-color:#FFCDD2}
+
+    .status-sel{padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer}
+
+    .section-divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+    @media(max-width:768px){.filter-bar{grid-template-columns:1fr 1fr;}.detail-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<nav class="topbar">
+  <a href="/" class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/>
+      </svg>
+    </div>
+    Metro<span>Bus</span>
+  </a>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="user-pill">
+      <div class="user-avatar">{{ admin_user[0]|upper }}</div>
+      <span style="color:var(--text);font-weight:500">{{ admin_user }}</span>
+    </div>
+    <a href="/" class="nav-pill">Passenger Portal</a>
+    <a href="/report" target="_blank" class="nav-pill">Download Report</a>
+    <a href="/logout" class="logout-link">Sign Out</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- Header -->
+  <div class="admin-row">
+    <div>
+      <h2>Admin <span class="accent">Dashboard</span></h2>
+      <p>Welcome back, <strong>{{ admin_user }}</strong> — manage and analyze all passenger feedback</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="document.getElementById('csv-file').click()">Upload CSV</button>
+      <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="uploadCSV(this)">
+      <div id="upload-msg"></div>
+      <button class="btn btn-teal" onclick="loadAll()">Refresh Data</button>
+      <a href="/report" target="_blank" class="btn btn-primary">Download PDF Report</a>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="grid-4" style="margin-bottom:22px">
+    <div class="stat-card s-blue">
+      <div class="s-label">Total Complaints</div>
+      <div class="s-value" id="s-total">—</div>
+      <div class="s-sub">All time records</div>
+    </div>
+    <div class="stat-card s-orange">
+      <div class="s-label">Pending</div>
+      <div class="s-value" id="s-pending">—</div>
+      <div class="s-sub">Needs review</div>
+    </div>
+    <div class="stat-card s-green">
+      <div class="s-label">Completed</div>
+      <div class="s-value" id="s-complete">—</div>
+      <div class="s-sub">Resolved</div>
+    </div>
+    <div class="stat-card s-red">
+      <div class="s-label">On Hold</div>
+      <div class="s-value" id="s-hold">—</div>
+      <div class="s-sub">Delayed review</div>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('complaints',this)">Complaints</button>
+    <button class="tab-btn" onclick="switchTab('analytics',this)">Analytics</button>
+    <button class="tab-btn" onclick="switchTab('routes',this)">Route Scores</button>
+    <button class="tab-btn" onclick="switchTab('ai',this)">AI Analyzer</button>
+  </div>
+
+  <!-- TAB: COMPLAINTS -->
+  <div class="tab-panel active" id="tab-complaints">
+    <div class="card">
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <span class="search-icon">&#9906;</span>
+          <input class="search-input" id="search-inp" type="text" placeholder="Search by name, CNIC, feedback..." oninput="applyFilters()">
+        </div>
+        <select class="flt" id="flt-route" onchange="applyFilters()">
+          <option value="">All Routes</option>
+          <option>R10</option><option>R12</option><option>R15</option><option>R20</option><option>R25</option>
+        </select>
+        <select class="flt" id="flt-emotion" onchange="applyFilters()">
+          <option value="">All Emotions</option>
+          <option>Angry</option><option>Frustrated</option><option>Neutral</option><option>Satisfied</option><option>Happy</option>
+        </select>
+        <select class="flt" id="flt-quality" onchange="applyFilters()">
+          <option value="">All Quality</option>
+          <option>Bad</option><option>Average</option><option>Excellent</option>
+        </select>
+        <select class="flt" id="flt-status" onchange="applyFilters()">
+          <option value="">All Status</option>
+          <option>Pending</option><option>Complete</option><option>On Hold</option>
+        </select>
+        <button class="sort-btn" id="sort-btn" onclick="toggleSort()">Sort: Date</button>
+      </div>
+      <div class="results-info" id="results-info"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('id')" style="cursor:pointer">ID</th>
+              <th onclick="sortBy('name')" style="cursor:pointer">Name</th>
+              <th onclick="sortBy('route')" style="cursor:pointer">Route</th>
+              <th onclick="sortBy('emotion')" style="cursor:pointer">Emotion</th>
+              <th onclick="sortBy('quality')" style="cursor:pointer">Quality</th>
+              <th onclick="sortBy('status')" style="cursor:pointer">Status</th>
+              <th onclick="sortBy('date')" style="cursor:pointer">Date</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-body">
+            <tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted)">Loading complaints...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: ANALYTICS -->
+  <div class="tab-panel" id="tab-analytics">
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card"><div class="card-title"><div class="icon-dot" style="background:var(--accent)"></div>Emotion Distribution</div><div class="chart-wrap"><canvas id="emotionChart"></canvas></div></div>
+      <div class="card"><div class="card-title"><div class="icon-dot" style="background:var(--success)"></div>Quality Classification</div><div class="chart-wrap"><canvas id="qualityChart"></canvas></div></div>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title"><div class="icon-dot"></div>Route-wise Complaint Volume</div>
+      <div class="chart-wrap-tall"><canvas id="routeChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="icon-dot" style="background:var(--warning)"></div>AI-Powered Suggestions</div>
+      <div id="sug-loading" style="padding:16px;color:var(--muted);font-size:13px">Loading AI suggestions...</div>
+      <ul class="sug-list" id="sug-list" style="display:none"></ul>
+    </div>
+  </div>
+
+  <!-- TAB: ROUTE SCORES -->
+  <div class="tab-panel" id="tab-routes">
+    <div class="card">
+      <div class="card-title"><div class="icon-dot"></div>Route Performance Scores</div>
+      <div class="tbl-wrap">
+        <table class="route-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Route</th>
+              <th>Health</th>
+              <th>Score (0–10)</th>
+              <th>Total</th>
+              <th style="color:var(--success)">Excellent</th>
+              <th style="color:var(--warning)">Average</th>
+              <th style="color:var(--danger)">Bad</th>
+            </tr>
+          </thead>
+          <tbody id="route-scores-body">
+            <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading route data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-title"><div class="icon-dot" style="background:var(--warning)"></div>Route AI Recommendations</div>
+      <div id="sug-loading2" style="padding:16px;color:var(--muted);font-size:13px">Loading AI recommendations...</div>
+      <ul class="sug-list" id="sug-list2" style="display:none"></ul>
+    </div>
+  </div>
+
+  <!-- TAB: AI ANALYZER -->
+  <div class="tab-panel" id="tab-ai">
+    <div class="card">
+      <div class="card-title"><div class="icon-dot" style="background:var(--primary)"></div>Real-time Feedback Analyzer</div>
+      <div class="analyze-wrap">
+        <div>
+          <div class="form-group">
+            <label>Paste Feedback Text</label>
+            <textarea id="analyze-text" placeholder="Paste any passenger feedback text here to analyze it with AI..." style="min-height:160px"></textarea>
+          </div>
+          <button class="btn btn-primary" id="analyze-btn" onclick="analyzeFeedback()">Analyze with AI</button>
+        </div>
+        <div>
+          <div class="form-group">
+            <label>Analysis Result</label>
+            <div class="ai-result" id="ai-result">
+              Enter feedback text on the left and click Analyze to see AI-powered insights.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Complaint Detail Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModalDirect()">&#215;</button>
+    <div class="modal-title" id="m-name">Complaint Detail</div>
+    <div class="modal-id" id="m-id"></div>
+
+    <div class="detail-grid">
+      <div class="detail-box"><div class="dlabel">CNIC</div><div class="dval" id="m-cnic">—</div></div>
+      <div class="detail-box"><div class="dlabel">Route</div><div class="dval" id="m-route">—</div></div>
+      <div class="detail-box"><div class="dlabel">Date</div><div class="dval" id="m-date">—</div></div>
+      <div class="detail-box"><div class="dlabel">Sentiment</div><div class="dval" id="m-sentiment">—</div></div>
+    </div>
+
+    <div class="feedback-full" id="m-feedback"></div>
+
+    <div class="tags-row" id="m-tags"></div>
+
+    <div class="status-row">
+      <label>Update Status:</label>
+      <select id="m-status" class="flt" onchange="updateModalStatus()">
+        <option>Pending</option>
+        <option>Complete</option>
+        <option>On Hold</option>
+      </select>
+      <span id="m-status-msg" style="font-size:12px;color:var(--success);display:none;font-weight:600">Status updated</span>
+    </div>
+
+    <div class="notes-title">Internal Notes</div>
+    <div id="m-notes-list"></div>
+    <div class="note-form">
+      <textarea id="note-text" placeholder="Add an internal note..."></textarea>
+      <button class="btn btn-teal" onclick="submitNote()" style="align-self:flex-end">Add Note</button>
+    </div>
+    <div id="note-msg" style="display:none;font-size:12px;margin-top:8px;padding:6px 10px;border-radius:6px"></div>
+  </div>
+</div>
+
+<script>
+var allComplaints = [], filteredComplaints = [];
+var currentSort = { col: 'date', dir: 'desc' };
+var currentComplaintId = null;
+var eChart = null, qChart = null, rChart = null;
+var chartsLoaded = false;
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'analytics' && !chartsLoaded) { loadStats(); chartsLoaded = true; }
+  if (name === 'routes') loadRouteScores();
+}
+
+function loadAll() { loadComplaints(); loadStats(); loadSuggestions(); }
+
+function loadStats() {
+  fetch('/api/stats')
+  .then(function(r){ return r.json(); })
+  .then(function(s){
+    document.getElementById('s-total').textContent   = s.total;
+    document.getElementById('s-pending').textContent = s.pending;
+    document.getElementById('s-complete').textContent= s.complete;
+    document.getElementById('s-hold').textContent    = s.on_hold;
+    renderCharts(s);
+  }).catch(function(e){ console.error('stats error',e); });
+}
+
+function loadComplaints() {
+  fetch('/api/complaints')
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    allComplaints = data;
+    applyFilters();
+  }).catch(function(e){ console.error('complaints error',e); });
+}
+
+function loadSuggestions() {
+  var loadEl1 = document.getElementById('sug-loading');
+  var loadEl2 = document.getElementById('sug-loading2');
+  var list1   = document.getElementById('sug-list');
+  var list2   = document.getElementById('sug-list2');
+  if(loadEl1) { loadEl1.style.display = 'block'; list1.style.display = 'none'; }
+  if(loadEl2) { loadEl2.style.display = 'block'; list2.style.display = 'none'; }
+
+  fetch('/api/suggestions')
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    var labels = ['URGENT','NOTE','INFO','ACTION','PLAN','REVIEW'];
+    var html = data.map(function(s, i){
+      return '<li><span class="sug-icon">' + (labels[i] || 'TIP') + '</span><span class="sug-text">' + s + '</span></li>';
+    }).join('');
+    var fallback = '<li><span class="sug-icon">INFO</span><span class="sug-text">No suggestions available at this time.</span></li>';
+    if(list1){ list1.innerHTML = html || fallback; list1.style.display = 'block'; }
+    if(list2){ list2.innerHTML = html || fallback; list2.style.display = 'block'; }
+    if(loadEl1) loadEl1.style.display = 'none';
+    if(loadEl2) loadEl2.style.display = 'none';
+  }).catch(function(e){
+    console.error('suggestions error', e);
+    var err = '<li><span class="sug-icon">ERR</span><span class="sug-text">Could not load AI suggestions. Please refresh.</span></li>';
+    if(list1){ list1.innerHTML = err; list1.style.display = 'block'; }
+    if(list2){ list2.innerHTML = err; list2.style.display = 'block'; }
+    if(loadEl1) loadEl1.style.display = 'none';
+    if(loadEl2) loadEl2.style.display = 'none';
+  });
+}
+
+function applyFilters() {
+  var q     = document.getElementById('search-inp').value.toLowerCase().trim();
+  var route = document.getElementById('flt-route').value;
+  var emo   = document.getElementById('flt-emotion').value;
+  var qual  = document.getElementById('flt-quality').value;
+  var stat  = document.getElementById('flt-status').value;
+
+  filteredComplaints = allComplaints.filter(function(c){
+    if (q && !(c.name.toLowerCase().includes(q) || c.cnic.toLowerCase().includes(q) || c.feedback.toLowerCase().includes(q) || c.id.toLowerCase().includes(q))) return false;
+    if (route && c.route !== route) return false;
+    if (emo   && c.emotion  !== emo)   return false;
+    if (qual  && c.quality  !== qual)  return false;
+    if (stat  && c.status   !== stat)  return false;
+    return true;
+  });
+  sortComplaints();
+  renderTable();
+  document.getElementById('results-info').innerHTML = 'Showing <span>'+filteredComplaints.length+'</span> of <span>'+allComplaints.length+'</span> complaints';
+}
+
+function sortBy(col) {
+  if (currentSort.col === col) {
+    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSort.col = col; currentSort.dir = 'asc';
+  }
+  document.getElementById('sort-btn').textContent = 'Sort: '+col.charAt(0).toUpperCase()+col.slice(1);
+  sortComplaints(); renderTable();
+}
+function toggleSort() { currentSort.dir = currentSort.dir==='asc'?'desc':'asc'; sortComplaints(); renderTable(); }
+function sortComplaints() {
+  var col=currentSort.col, dir=currentSort.dir;
+  filteredComplaints.sort(function(a,b){
+    var av=a[col]||'', bv=b[col]||'';
+    return dir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+}
+
+function renderTable() {
+  var tbody = document.getElementById('tbl-body');
+  if (!filteredComplaints.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted)">No complaints match your filters.</td></tr>';
+    return;
+  }
+  var qc = function(q){ return q==='Bad'?'b-bad':q==='Excellent'?'b-exc':'b-avg'; };
+  var ec = function(e){ return 'b-'+e.toLowerCase(); };
+  var rows = filteredComplaints.map(function(c){
+    return '<tr>'+
+      '<td style="font-size:11px;color:var(--muted);font-family:monospace">'+c.id+'</td>'+
+      '<td><div style="font-weight:600;font-size:13px;color:var(--text)">'+c.name+'</div></td>'+
+      '<td><span style="font-size:12px;color:var(--accent);font-weight:600">'+c.route+'</span></td>'+
+      '<td><span class="badge '+ec(c.emotion)+'">'+c.emotion+'</span></td>'+
+      '<td><span class="badge '+qc(c.quality)+'">'+c.quality+'</span></td>'+
+      '<td><select class="status-sel" onchange="quickStatus(\''+c.id+'\',this.value)">'+
+        '<option'+(c.status==='Pending'?' selected':'')+'>Pending</option>'+
+        '<option'+(c.status==='Complete'?' selected':'')+'>Complete</option>'+
+        '<option'+(c.status==='On Hold'?' selected':'')+'>On Hold</option>'+
+      '</select></td>'+
+      '<td style="font-size:12px;color:var(--muted)">'+c.date+'</td>'+
+      '<td><button class="btn" style="padding:5px 12px;font-size:12px" onclick="openModal(\''+c.id+'\')">View</button></td>'+
+    '</tr>';
+  }).join('');
+  tbody.innerHTML = rows;
+}
+
+function quickStatus(id, status) {
+  fetch('/api/update-status', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id:id, status:status})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){ if(d.success){ loadStats(); var c=allComplaints.find(function(x){return x.id===id;}); if(c)c.status=status; } })
+  .catch(function(e){ console.error(e); });
+}
+
+function openModal(id) {
+  currentComplaintId = id;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('m-name').textContent = 'Loading...';
+  document.getElementById('m-notes-list').innerHTML = '';
+  document.getElementById('note-text').value = '';
+  document.getElementById('note-msg').style.display = 'none';
+
+  fetch('/api/complaint/'+id)
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var c = d.complaint;
+    document.getElementById('m-name').textContent = c.name;
+    document.getElementById('m-id').textContent   = c.id + ' — Submitted: ' + c.date;
+    document.getElementById('m-cnic').textContent     = c.cnic;
+    document.getElementById('m-route').textContent    = c.route;
+    document.getElementById('m-date').textContent     = c.date;
+    document.getElementById('m-sentiment').textContent= c.sentiment;
+    document.getElementById('m-feedback').textContent = c.feedback;
+    var mStatus = document.getElementById('m-status');
+    mStatus.value = c.status;
+    var qc = c.quality==='Bad'?'b-bad':c.quality==='Excellent'?'b-exc':'b-avg';
+    var sc2= c.sentiment==='Negative'?'b-neg':c.sentiment==='Positive'?'b-pos':'b-neu';
+    var ec = 'b-'+c.emotion.toLowerCase();
+    document.getElementById('m-tags').innerHTML =
+      '<span class="badge '+ec+'">'+c.emotion+'</span>'+
+      '<span class="badge '+qc+'">'+c.quality+'</span>'+
+      '<span class="badge '+sc2+'">'+c.sentiment+'</span>';
+    renderNotes(d.notes);
+  }).catch(function(e){ document.getElementById('m-name').textContent = 'Error loading complaint'; });
+}
+
+function renderNotes(notes) {
+  var el = document.getElementById('m-notes-list');
+  if (!notes || !notes.length) {
+    el.innerHTML = '<p class="no-notes">No notes yet. Add the first note below.</p>';
+    return;
+  }
+  el.innerHTML = notes.map(function(n){
+    return '<div class="note-item">'+
+      '<div class="note-meta">'+n.admin+' — '+n.timestamp+'</div>'+
+      '<div class="note-text">'+n.note+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function submitNote() {
+  var text = document.getElementById('note-text').value.trim();
+  if (!text) return;
+  var btn = document.querySelector('.note-form .btn-teal');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  fetch('/api/add-note', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({complaint_id: currentComplaintId, note: text})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.success) {
+      document.getElementById('note-text').value = '';
+      var msg = document.getElementById('note-msg');
+      msg.textContent = 'Note saved successfully.';
+      msg.style.color='var(--success)';
+      msg.style.background='var(--success-l)';
+      msg.style.padding='6px 10px';
+      msg.style.borderRadius='6px';
+      msg.style.display='block';
+      setTimeout(function(){ msg.style.display='none'; }, 3000);
+      openModal(currentComplaintId);
+    }
+    btn.disabled=false; btn.textContent='Add Note';
+  }).catch(function(){ btn.disabled=false; btn.textContent='Add Note'; });
+}
+
+function updateModalStatus() {
+  var newStatus = document.getElementById('m-status').value;
+  fetch('/api/update-status', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id: currentComplaintId, status: newStatus})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.success) {
+      var msg = document.getElementById('m-status-msg');
+      msg.style.display='inline'; setTimeout(function(){ msg.style.display='none'; },2500);
+      var c = allComplaints.find(function(x){return x.id===currentComplaintId;});
+      if(c){ c.status = newStatus; applyFilters(); }
+      loadStats();
+    }
+  });
+}
+
+function closeModal(e) { if(e.target.id==='modal-overlay') closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function loadRouteScores() {
+  fetch('/api/route-scores')
+  .then(function(r){ return r.json(); })
+  .then(function(scores){
+    var tbody = document.getElementById('route-scores-body');
+    if (!scores.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No route data available.</td></tr>';
+      return;
+    }
+    var barColor = function(h){ return h==='green'?'#2E7D32':h==='yellow'?'#F9A825':'#C62828'; };
+    tbody.innerHTML = scores.map(function(s, i){
+      var rank = i+1;
+      var pct = (s.score/10*100).toFixed(0);
+      var rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : rank + 'th';
+      return '<tr>'+
+        '<td><span class="rank-num'+(rank<=3?' top':'')+'">'+rankLabel+'</span></td>'+
+        '<td><strong style="font-size:14px;color:var(--text)">'+s.route+'</strong></td>'+
+        '<td><span class="health-dot h-'+s.health+'"></span>'+s.health.charAt(0).toUpperCase()+s.health.slice(1)+'</td>'+
+        '<td><div class="score-bar-wrap">'+
+          '<div class="score-bar-bg"><div class="score-bar-fill" style="width:'+pct+'%;background:'+barColor(s.health)+'"></div></div>'+
+          '<span class="score-val" style="color:'+barColor(s.health)+'">'+s.score+'</span>'+
+        '</div></td>'+
+        '<td>'+s.total+'</td>'+
+        '<td style="color:var(--success);font-weight:600">'+s.excellent+'</td>'+
+        '<td style="color:var(--warning);font-weight:600">'+s.average+'</td>'+
+        '<td style="color:var(--danger);font-weight:600">'+s.bad+'</td>'+
+      '</tr>';
+    }).join('');
+  }).catch(function(e){ console.error('route scores error',e); });
+}
+
+function renderCharts(s) {
+  var gridColor = 'rgba(0,0,0,0.05)';
+  var labelColor = '#6B7A90';
+  if(eChart)eChart.destroy();
+  var emoColors = {
+    'Angry':'#EF5350','Frustrated':'#FF9800','Happy':'#26A69A','Neutral':'#78909C','Satisfied':'#42A5F5'
+  };
+  var emoLabels = Object.keys(s.emotions);
+  var emoBg = emoLabels.map(function(l){ return emoColors[l]||'#90A4AE'; });
+  eChart=new Chart(document.getElementById('emotionChart'),{type:'bar',
+    data:{
+      labels:emoLabels,
+      datasets:[{
+        data:Object.values(s.emotions),
+        backgroundColor:emoBg,
+        borderWidth:0, borderRadius:7, hoverOffset:4
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ' '+ctx.raw+' complaints';}}}},
+      scales:{y:{beginAtZero:true,ticks:{color:labelColor,stepSize:Math.ceil(Math.max.apply(null,Object.values(s.emotions))/8)||1},grid:{color:gridColor}},x:{ticks:{color:labelColor,font:{weight:'600'}},grid:{display:false}}}}
+  });
+  if(qChart)qChart.destroy();
+  var qualColors={'Bad':'#EF5350','Average':'#FF9800','Excellent':'#43A047'};
+  var qualLabels=Object.keys(s.qualities);
+  var qualBg=qualLabels.map(function(l){return qualColors[l]||'#90A4AE';});
+  qChart=new Chart(document.getElementById('qualityChart'),{type:'doughnut',
+    data:{
+      labels:qualLabels,
+      datasets:[{data:Object.values(s.qualities),backgroundColor:qualBg,borderWidth:0,hoverOffset:8}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:true,position:'bottom',labels:{color:labelColor,font:{size:12,weight:'600'},padding:16,usePointStyle:true,pointStyleWidth:10}}}}
+  });
+  if(rChart)rChart.destroy();
+  rChart=new Chart(document.getElementById('routeChart'),{type:'bar',
+    data:{
+      labels:Object.keys(s.routes),
+      datasets:[{
+        data:Object.values(s.routes),
+        backgroundColor:['#1565C0','#0288D1','#00838F','#2E7D32','#6A1B9A'],
+        borderWidth:0, borderRadius:6
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ' '+ctx.raw+' complaints';}}}},
+      scales:{x:{beginAtZero:true,ticks:{color:labelColor,stepSize:Math.ceil(Math.max.apply(null,Object.values(s.routes))/6)||1},grid:{color:gridColor}},y:{ticks:{color:labelColor,font:{weight:'600',size:13}},grid:{display:false}}}}
+  });
+}
+
+function analyzeFeedback() {
+  var text = document.getElementById('analyze-text').value.trim();
+  if (!text) { alert('Please enter feedback text.'); return; }
+  var box=document.getElementById('ai-result'), btn=document.getElementById('analyze-btn');
+  box.className='ai-result'; box.innerHTML='<span class="loader loader-dark"></span>&nbsp; Analyzing with AI...';
+  btn.disabled=true;
+  fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text})})
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var qc=d.quality==='Bad'?'b-bad':d.quality==='Excellent'?'b-exc':'b-avg';
+    var sc=d.sentiment==='Negative'?'b-neg':d.sentiment==='Positive'?'b-pos':'b-neu';
+    var ec='b-'+d.emotion.toLowerCase();
+    box.className='ai-result loaded';
+    box.innerHTML=
+      '<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px">Analysis Result</div>'+
+      '<div style="margin-bottom:8px;font-size:13px;color:var(--text2)"><strong>Summary:</strong> '+d.summary+'</div>'+
+      '<div style="margin-bottom:12px;font-size:13px;color:var(--text2)"><strong>Recommendation:</strong> '+d.suggestion+'</div>'+
+      '<div class="tag-row"><span class="badge '+ec+'">'+d.emotion+'</span><span class="badge '+qc+'">'+d.quality+'</span><span class="badge '+sc+'">'+d.sentiment+'</span></div>';
+    btn.disabled=false;
+  }).catch(function(){ box.innerHTML='Error connecting to server. Please try again.'; btn.disabled=false; });
+}
+
+function uploadCSV(input) {
+  var file=input.files[0]; if(!file) return;
+  var form=new FormData(); form.append('file',file);
+  var msg=document.getElementById('upload-msg');
+  msg.style.display='block'; msg.style.color='var(--accent)'; msg.textContent='Uploading...';
+  fetch('/api/upload-csv',{method:'POST',body:form})
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.success){ msg.style.color='var(--success)'; msg.textContent='Imported '+d.count+' records successfully.'; loadAll(); }
+    else{ msg.style.color='var(--danger)'; msg.textContent='Upload failed: '+d.message; }
+  }).catch(function(){ msg.style.color='var(--danger)'; msg.textContent='Connection error during upload.'; });
+}
+
+window.onload = loadAll;
+</script>
+</body>
+</html>
