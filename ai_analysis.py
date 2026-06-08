@@ -1,22 +1,8 @@
-import re, os
+import re
 from textblob import TextBlob
 
-# ── Anthropic API Client ───────────────────────────────────────────────
-try:
-    import anthropic as _anthropic
-    ANTHROPIC_AVAILABLE = True
-except Exception as _ae:
-    ANTHROPIC_AVAILABLE = False
-    print(f"[ai_analysis] Anthropic SDK not available: {_ae}")
-
-def _get_client():
-    """Create a fresh Anthropic client reading key from env at call time."""
-    key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not key:
-        return None
-    return _anthropic.Anthropic(api_key=key)
-
 # ── ML Model Integration ──────────────────────────────────────────────
+# Import the real machine learning model trained on the labeled CSV data.
 try:
     import ml_model as _ml
     _ml.load_models()
@@ -28,6 +14,7 @@ except Exception as _e:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # WEIGHTED KEYWORD DICTIONARIES
+# Each word has a weight (higher = stronger signal)
 # ─────────────────────────────────────────────────────────────────────────────
 
 EMOTION_WEIGHTS = {
@@ -121,21 +108,31 @@ QUALITY_WEIGHTS = {
     },
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# NEGATION HANDLING
+# ─────────────────────────────────────────────────────────────────────────────
 NEGATIONS = ['not', "n't", 'no', 'never', 'neither', 'nor', 'without', 'hardly']
 
 
 def preprocess(text):
+    """Lowercase, remove punctuation except apostrophes."""
     text = text.lower()
     text = re.sub(r"[^\w\s']", ' ', text)
     return text
 
 
 def score_text(text, weight_dict):
+    """
+    Score text against a weights dictionary.
+    Handles multi-word phrases and basic negation.
+    Returns dict of {category: score}.
+    """
     t = preprocess(text)
     words = t.split()
     scores = {cat: 0 for cat in weight_dict}
 
     for cat, kws in weight_dict.items():
+        # Sort by length desc so multi-word phrases matched first
         for phrase, weight in sorted(kws.items(), key=lambda x: -len(x[0].split())):
             phrase_words = phrase.split()
             phrase_len = len(phrase_words)
@@ -143,15 +140,19 @@ def score_text(text, weight_dict):
             if phrase_len == 1:
                 for i, w in enumerate(words):
                     if w == phrase:
+                        # Check for negation in 3 words before
                         window = words[max(0, i-3):i]
                         if any(neg in window for neg in NEGATIONS):
+                            # Negation — subtract half weight from opposite
                             scores[cat] -= weight * 0.5
                         else:
                             scores[cat] += weight
             else:
+                # Multi-word phrase
                 for i in range(len(words) - phrase_len + 1):
                     chunk = ' '.join(words[i:i+phrase_len])
                     if chunk == phrase:
+                        # Check negation
                         window = words[max(0, i-3):i]
                         if any(neg in window for neg in NEGATIONS):
                             scores[cat] -= weight * 0.5
@@ -163,13 +164,16 @@ def score_text(text, weight_dict):
 
 def detect_emotion(text):
     scores = score_text(text, EMOTION_WEIGHTS)
+    # Prefer Neutral over Satisfied when Satisfied score is weak
+    # and neutral indicators like 'nothing special', 'okay' are present
     t_low = text.lower()
     neutral_phrases = ['nothing special', 'just okay', 'so-so', 'no issues',
                        'nothing to complain', 'no complaints', 'mediocre']
-    if scores.get('Satisfied', 0) < 3 and any(p in t_low for p in neutral_phrases):
+    if scores.get('Satisfied',0) < 3 and any(p in t_low for p in neutral_phrases):
         scores['Neutral'] = scores.get('Neutral', 0) + 3
     best = max(scores, key=scores.get)
     best_score = scores[best]
+    # If no signal at all, fall back to TextBlob polarity
     if best_score <= 0:
         try:
             pol = TextBlob(text).sentiment.polarity
@@ -197,16 +201,19 @@ def detect_quality(text):
 
 
 def detect_sentiment(text):
+    """TextBlob + keyword boosting for better accuracy."""
     try:
         pol = TextBlob(text).sentiment.polarity
     except:
         pol = 0.0
 
     t = preprocess(text)
+    # Boost negative
     neg_boosters = ['rude', 'disrespectful', 'dangerous', 'overcharged', 'filthy',
                     'not working', 'overcrowded', 'no ac', 'broken', 'smelly', 'waiting',
                     'terrible', 'horrible', 'worst', 'disgusting', 'unsafe', 'drunk',
                     'threatening', 'abusive', 'cheated', 'broke down', 'useless']
+    # Boost positive
     pos_boosters = ['excellent', 'amazing', 'wonderful', 'fantastic', 'superb',
                     'outstanding', 'perfect', 'brilliant', 'great', 'impressed',
                     'very helpful', 'very polite', 'well done', 'keep it up']
@@ -217,11 +224,12 @@ def detect_sentiment(text):
         if word in t:
             pol += 0.2
 
+    # Clamp: negated negative phrases should not produce strongly Positive
     t_low = text.lower()
     negated_negatives = ['not bad', 'not late', 'not terrible', 'not rude',
                          'not dirty', 'not too bad', 'not horrible']
     if any(p in t_low for p in negated_negatives) and pol > 0.1:
-        pol = min(pol, 0.08)
+        pol = min(pol, 0.08)  # cap at Neutral
     if pol > 0.1:   return 'Positive'
     if pol < -0.1:  return 'Negative'
     return 'Neutral'
@@ -232,6 +240,10 @@ def analyze(text):
         return {'emotion': 'Neutral', 'quality': 'Average', 'sentiment': 'Neutral',
                 'summary': 'No feedback text provided.', 'suggestion': 'Please provide detailed feedback.'}
 
+    # ── Use Real ML Model (trained on labeled CSV data) ──────────────
+    # The ML model has learned patterns from 100 real feedback examples.
+    # It converts text into word scores (TF-IDF) and then predicts labels.
+    # If ML is unavailable for any reason, we fall back to the keyword rules.
     if ML_AVAILABLE:
         ml_preds  = _ml.ml_predict_with_confidence(text)
         emotion   = ml_preds.get('emotion',   detect_emotion(text))
@@ -245,13 +257,14 @@ def analyze(text):
         ml_preds  = {}
         ml_used   = False
 
+    # Summary
     summary_map = {
-        ('Angry',  'Bad'):        'This complaint describes a serious service failure requiring urgent attention.',
-        ('Angry',  'Average'):    'Passenger experienced frustration with service quality.',
-        ('Frustrated', 'Bad'):    'Passenger is frustrated with poor service conditions.',
+        ('Angry',  'Bad'):       'This complaint describes a serious service failure requiring urgent attention.',
+        ('Angry',  'Average'):   'Passenger experienced frustration with service quality.',
+        ('Frustrated', 'Bad'):   'Passenger is frustrated with poor service conditions.',
         ('Frustrated', 'Average'):'Service issues are causing passenger frustration.',
-        ('Happy',  'Excellent'):  'Passenger had an excellent experience and is highly satisfied.',
-        ('Happy',  'Average'):    'Passenger had a positive experience with some minor concerns.',
+        ('Happy',  'Excellent'): 'Passenger had an excellent experience and is highly satisfied.',
+        ('Happy',  'Average'):   'Passenger had a positive experience with some minor expectations.',
         ('Satisfied', 'Excellent'):'Passenger is satisfied and rates the service as excellent.',
         ('Satisfied', 'Average'): 'Passenger is satisfied with the current service level.',
         ('Neutral', 'Average'):   'Passenger had a neutral experience — service met basic expectations.',
@@ -259,10 +272,11 @@ def analyze(text):
     summary = summary_map.get((emotion, quality),
         f'Feedback indicates {emotion.lower()} experience with {quality.lower()} service quality.')
 
+    # Suggestion
     suggestion_map = {
-        'Angry':     'Immediately investigate and address the reported incident. Consider disciplinary action and appropriate follow-up with the passenger.',
-        'Frustrated':'Improve service reliability on this route. Add more buses during peak hours and address reported maintenance issues.',
-        'Happy':     'Recognize and reward the staff involved. Share best practices with other routes as a benchmark.',
+        'Angry':     'Immediately investigate and address the reported incident. Consider disciplinary action and passenger compensation.',
+        'Frustrated':'Improve service reliability on this route. Add more buses during peak hours and fix reported maintenance issues.',
+        'Happy':     'Recognize and reward the staff involved. Share best practices with other routes.',
         'Satisfied': 'Maintain current service standards. Gather more detailed feedback to identify further improvement areas.',
         'Neutral':   'Conduct a detailed passenger satisfaction survey to identify specific areas for improvement.',
     }
@@ -282,150 +296,75 @@ def analyze(text):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CHATBOT — Powered by Anthropic Claude API
+# CHATBOT
 # ─────────────────────────────────────────────────────────────────────────────
-_CHATBOT_SYSTEM = """You are a professional AI assistant for Metro Bus Pakistan, operated by the Punjab Mass Transit Authority.
-Your role is to assist passengers with:
-- Submitting complaints and feedback (form on the portal, fields: Name, CNIC, Bus Route, Feedback)
-- Bus route information:
-  R10: Saddar to Gulberg
-  R12: Johar Town to Airport
-  R15: DHA to Model Town
-  R20: Cantt to Shalimar
-  R25: Iqbal Town to Shahdara
-- Tracking complaint status (Tracking ID format: MB-XXXX; statuses: Pending, On Hold, Complete)
-- Bus schedules: Peak hours (7-9 AM, 5-8 PM) every 10-15 minutes; off-peak every 20-30 minutes; limited after 10 PM
-- Staff behavior complaints: include route, bus number, time, and description; action taken within 48 hours
-- Vehicle maintenance issues: AC, seats, windows — note bus route and number
-- Fare/overcharging complaints: note conductor, route, and time
-
-Rules:
-- Be professional, concise, and helpful
-- Do NOT use emojis or special symbols
-- Keep responses under 5 sentences unless listing steps
-- Always direct passengers to use the official feedback form for formal complaints
-- Respond in the same language as the user"""
-
-_CHATBOT_FALLBACK_RULES = [
+CHATBOT_RULES = [
     (r'submit|complain|how.*submit|file.*complaint|register',
-     "To submit a complaint:\n1. Fill in your Name and CNIC\n2. Select your bus route\n3. Describe your issue clearly\n4. Click Submit Feedback\n\nYou will receive a Tracking ID instantly."),
-    (r'saddar|route.*saddar|saddar.*route',
-     "Routes serving Saddar area:\n- R10: Saddar to Gulberg\n- R20: Cantt to Shalimar (via Saddar)\n\nBuses run every 15-20 minutes during peak hours."),
-    (r'track|status|check.*complaint|complaint.*status',
-     "To track your complaint:\n1. Keep your Tracking ID (e.g. MB-0001)\n2. Contact admin staff to check the dashboard\n3. Status updates: Pending, On Hold, Complete"),
+     "To submit a complaint:\n1. Fill in your name and CNIC\n2. Select your bus route\n3. Describe your issue clearly\n4. Click Submit Feedback\n\nYou will receive a Tracking ID instantly! "),
+    (r'saddar|route.*saddar|saddar.*route|which route.*saddar',
+     "Routes serving Saddar area:\n• R10 — Saddar ↔ Gulberg\n• R20 — Cantt ↔ Shalimar (via Saddar)\n\nBuses run every 15–20 minutes during peak hours. "),
+    (r'track|status|check.*complaint|complaint.*status|find.*complaint',
+     "To track your complaint:\n1. Keep your Tracking ID (e.g. MB-0001)\n2. Ask admin staff to check the dashboard\n3. Status: Pending → On Hold → Complete\n\nKeep your Tracking ID safe! "),
+    (r'info|require|what.*need|information|which fields|what fields',
+     "Required information:\n• Full Name\n• CNIC number (e.g. 35202-1234567-1)\n• Bus Route Number\n• Detailed feedback description\n\nAll fields are required. "),
     (r'timing|schedule|when|time.*bus|bus.*time|frequency',
-     "Metro Bus Schedule:\n- Peak hours (7-9 AM, 5-8 PM): every 10-15 minutes\n- Off-peak: every 20-30 minutes\n- Night service: limited after 10 PM\n\nTimes vary by route."),
-    (r'hello|hi|hey|salam|good morning|good evening',
-     "Welcome to the Metro Bus Passenger Portal. I am your AI Assistant. I can help you with complaints, routes, timings, and more. How can I assist you today?"),
-    (r'thank|thanks|thank you',
-     "You are welcome. If you have any other questions or need to submit a complaint, please use the feedback form or ask me anything."),
+     "Metro Bus Schedule:\n• Peak hours (7–9 AM, 5–8 PM): every 10–15 minutes\n• Off-peak: every 20–30 minutes\n• Night service: limited after 10 PM\n\nTimes vary by route. "),
+    (r'clean|dirty|hygiene|sanitation|smell|filthy',
+     "Cleanliness complaints are handled seriously!\nPlease submit a formal complaint with:\n• Route number and bus number\n• Date and time of travel\n• Description of the issue\n\nOur hygiene team will be notified. "),
     (r'driver|staff|behavior|conduct|rude|disrespect|abusive',
-     "Staff behavior complaints are treated as a top priority. Please include in your feedback: route and bus number, time of the incident, and a detailed description. Action will be taken within 48 hours."),
+     "Staff behavior complaints are our top priority.\nPlease include in your feedback:\n• Route and bus number (if visible)\n• Time of the incident\n• Detailed description of behavior\n\nAction will be taken within 48 hours. "),
     (r'broken|repair|maintenance|ac|air condition|seat|window',
-     "For vehicle maintenance complaints, please note the bus route, bus number, and the specific issue (AC, seat, window, etc.). Our maintenance team will inspect the vehicle after you submit a formal complaint."),
-    (r'price|fare|ticket|cost|charge|overcharge',
-     "For fare complaints or overcharging, note the conductor details, route, and time, then submit a formal complaint. Overcharging is a serious offense handled directly by management."),
+     "Vehicle maintenance complaints are important!\nPlease note:\n• Bus route and number\n• Specific issue (AC, seat, window, etc.)\n• Your travel time\n\nOur maintenance team will inspect the bus. "),
+    (r'hello|hi|hey|salam|assalam|good morning|good evening|howdy',
+     "Hello!  Welcome to Metro Bus AI Assistant!\nI can help you with:\n• Submitting complaints\n• Route information\n• Tracking complaint status\n• Bus timings and schedules\n\nHow can I assist you today?"),
+    (r'thank|thanks|thank you|shukriya',
+     "You are welcome! \nIf you have any other questions or need to submit a complaint, I am always here to help.\n\nHave a safe journey! "),
+    (r'report|authority|government|official',
+     "Official reports are generated automatically by our system and sent to the Punjab Transport Authority.\n\nEach complaint is tracked and included in monthly reports. All serious complaints are escalated immediately. "),
+    (r'price|fare|ticket|cost|charge|money',
+     "For fare complaints or overcharging:\n• Note the conductor's description\n• Note the route and time\n• Submit a formal complaint\n\nOvercharging is a serious offense handled by management. "),
 ]
 
 
 def chatbot_reply(message):
-    """AI chatbot powered by Anthropic Claude API with rule-based fallback."""
-    if ANTHROPIC_AVAILABLE:
-        client = _get_client()
-        if client:
-            try:
-                response = client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=500,
-                    system=_CHATBOT_SYSTEM,
-                    messages=[{"role": "user", "content": message}]
-                )
-                return response.content[0].text.strip()
-            except Exception as e:
-                print(f"[chatbot_reply] Anthropic API error: {e}")
-
-    # Rule-based fallback
     msg = message.lower().strip()
-    for pattern, response in _CHATBOT_FALLBACK_RULES:
+    for pattern, response in CHATBOT_RULES:
         if re.search(pattern, msg):
             return response
-    return ("I understand your concern. For specific issues, please use the feedback form on the left.\n\n"
-            "I can help you with:\n- How to submit a complaint\n- Route information\n"
-            "- Complaint tracking\n- Bus timings\n- Driver or staff issues\n\nWhat would you like to know?")
+    return ("I understand your concern! For specific issues, please use the feedback form on the left.\n\n"
+            "I can help you with:\n• How to submit a complaint\n• Route information\n"
+            "• Complaint tracking\n• Bus timings\n• Driver/staff issues\n\nWhat would you like to know? ")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SUGGESTIONS — Powered by Anthropic Claude API
+# SUGGESTIONS
 # ─────────────────────────────────────────────────────────────────────────────
 def generate_suggestions(records):
-    """Generate AI-powered service improvement suggestions using Anthropic Claude API."""
     if not records:
-        return ["No feedback data available yet. Submit feedback to generate AI-powered suggestions."]
+        return ["Submit more feedback to generate AI suggestions."]
 
     total = len(records)
-    bad_count     = sum(1 for r in records if r.get('quality') == 'Bad')
-    excellent_count = sum(1 for r in records if r.get('quality') == 'Excellent')
+    bad_count  = sum(1 for r in records if r.get('quality') == 'Bad')
     emotion_counts = {}
-    route_counts   = {}
     for r in records:
         e = r.get('emotion', 'Neutral')
         emotion_counts[e] = emotion_counts.get(e, 0) + 1
-        rt = r.get('route', 'Unknown')
-        route_counts[rt] = route_counts.get(rt, 0) + 1
 
-    worst_route = max(route_counts, key=route_counts.get) if route_counts else "Unknown"
-
-    # Try Anthropic API first
-    if ANTHROPIC_AVAILABLE:
-        client = _get_client()
-        if client:
-            try:
-                summary_prompt = (
-                    f"You are an expert transit authority analyst for Metro Bus Pakistan (Punjab Mass Transit Authority).\n"
-                    f"Based on the following feedback data, provide exactly 6 specific, actionable improvement recommendations.\n\n"
-                    f"FEEDBACK STATISTICS:\n"
-                    f"- Total complaints: {total}\n"
-                    f"- Bad quality ratings: {bad_count} ({round(bad_count/total*100)}%)\n"
-                    f"- Excellent quality ratings: {excellent_count} ({round(excellent_count/total*100)}%)\n"
-                    f"- Emotion breakdown: {emotion_counts}\n"
-                    f"- Route with most complaints: {worst_route} ({route_counts.get(worst_route, 0)} complaints)\n\n"
-                    f"REQUIREMENTS:\n"
-                    f"- Provide exactly 6 recommendations, one per line\n"
-                    f"- Each recommendation must be specific and actionable (1-2 sentences)\n"
-                    f"- Do NOT use emojis, bullet points, or numbering\n"
-                    f"- Do NOT add any preamble or conclusion\n"
-                    f"- Focus on operations, staff, maintenance, and scheduling\n"
-                    f"- Return only the 6 recommendations, each on its own line"
-                )
-                response = client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=600,
-                    messages=[{"role": "user", "content": summary_prompt}]
-                )
-                text = response.content[0].text.strip()
-                suggestions = [s.strip() for s in text.split('\n') if s.strip()]
-                # Filter out empty lines and return up to 6
-                suggestions = [s for s in suggestions if len(s) > 20][:6]
-                if suggestions:
-                    return suggestions
-            except Exception as e:
-                print(f"[generate_suggestions] Anthropic API error: {e}")
-
-    # Rule-based fallback
     suggestions = []
+
     if bad_count > total * 0.5:
-        suggestions.append("URGENT: Over 50% of complaints are rated Bad. Conduct an immediate service quality audit across all routes and implement corrective action within 72 hours.")
+        suggestions.append(" URGENT: Over 50% of complaints rated Bad — conduct immediate service audit across all routes.")
     elif bad_count > total * 0.3:
-        suggestions.append("High Bad complaint rate detected. Schedule a service quality review this week and assign route supervisors to the most affected routes.")
+        suggestions.append("️ High Bad complaint rate — schedule service quality review within this week.")
 
     if emotion_counts.get('Angry', 0) > total * 0.25:
-        suggestions.append("High anger level detected in passenger feedback. Implement mandatory customer service and de-escalation training for all bus staff immediately.")
+        suggestions.append(" High anger level detected — implement mandatory staff behavior and customer service training program.")
     if emotion_counts.get('Frustrated', 0) > total * 0.25:
-        suggestions.append("High frustration rate detected. Focus on improving bus punctuality — deploy GPS-based real-time tracking and adjust scheduling on delayed routes.")
+        suggestions.append(" High frustration rate — improve bus punctuality and add GPS-based real-time tracking for passengers.")
 
-    suggestions.append("Implement weekly deep-cleaning inspections for all buses, with documented hygiene reports submitted to the central authority.")
-    suggestions.append("Increase bus frequency during peak hours (7-9 AM and 5-8 PM) to reduce overcrowding and improve passenger comfort.")
-    suggestions.append("Introduce a passenger awareness campaign on how to submit complaints, available at each bus stop and inside buses.")
-    suggestions.append("Conduct monthly anonymous passenger satisfaction surveys to track service improvement trends and identify recurring issues.")
+    suggestions.append(" Schedule weekly deep-cleaning inspections for all buses on all routes.")
+    suggestions.append(" Increase bus frequency during peak hours (7–9 AM and 5–8 PM) to reduce overcrowding.")
+    suggestions.append(" Introduce a mobile app for real-time bus tracking and digital complaint submission.")
+    suggestions.append(" Conduct monthly passenger satisfaction surveys to track service improvement trends.")
 
     return suggestions[:6]
