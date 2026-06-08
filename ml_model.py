@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score, classification_report
 
 # ── Paths ──────────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-DATA_FILE  = os.path.join(BASE_DIR, 'data', 'sample_feedbacks.csv')
+DATA_FILE  = os.path.join(BASE_DIR, 'data', 'extended_feedbacks.csv')
 MODEL_DIR  = os.path.join(BASE_DIR, 'data', 'models')
 os.makedirs(MODEL_DIR, exist_ok=True)
 
@@ -114,7 +114,7 @@ def load_models():
     all_exist = all(os.path.exists(p) for p in MODEL_FILES.values())
 
     if not all_exist:
-        print("⚙️  ML models not found. Training now from dataset...")
+        print("  ML models not found. Training now from dataset...")
         train_all_models(verbose=False)
         return
 
@@ -122,7 +122,7 @@ def load_models():
         with open(filepath, 'rb') as f:
             _models[target_name] = pickle.load(f)
 
-    print("✅  ML models loaded from disk successfully.")
+    print("  ML models loaded from disk successfully.")
 
 
 
@@ -217,8 +217,4 @@ def get_model_accuracy() -> dict:
 if __name__ == '__main__':
     print("\n  Metro Bus Feedback Analyzer — ML Model Training")
     print("=" * 52)
-    scores = train_all_models(verbose=True)
-    print("\n📊  Final Accuracy Summary:")
-    for name, acc in scores.items():
-        bar = '█' * int(acc / 5) + '░' * (20 - int(acc / 5))
-        print(f"    {name:<12} [{bar}]  {acc}%")
+
