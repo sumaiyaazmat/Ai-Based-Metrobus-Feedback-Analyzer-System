@@ -323,7 +323,10 @@ def generate_pdf_report(stats, suggestions, records):
 
     # ── AI RECOMMENDATIONS ────────────────────────────────────────────
     story += section_header("AI-Generated Improvement Recommendations")
-
+    rec_header = Table(
+    [[Paragraph("AI-generated recommendations based on passenger feedback analysis.", sBodyBold)]],
+    colWidths=[W]
+)
     rec_header.setStyle(TableStyle([
         ('BACKGROUND',    (0, 0), (-1, -1), colors.HexColor('#E3EEFF')),
         ('TOPPADDING',    (0, 0), (-1, -1), 8),
