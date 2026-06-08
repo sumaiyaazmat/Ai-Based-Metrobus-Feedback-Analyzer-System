@@ -1,4 +1,4 @@
-import os
+﻿import os
 import pandas as pd
 import csv
 from datetime import datetime
@@ -8,6 +8,8 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 FEEDBACK_FILE  = os.path.join(DATA_DIR, 'feedback.csv')
 NOTES_FILE     = os.path.join(DATA_DIR, 'notes.csv')
 COLUMNS = ['id','name','cnic','route','feedback','emotion','sentiment','quality','status','date']
+CACHE_DATA = None
+CACHE_MTIME = None
 
 SAMPLES = [
     ['MB-0001','Ahmad Raza','35202-1234567-1','R10','Bus was extremely late and driver was very rude to passengers.','Angry','Negative','Bad','Pending','2025-01-10'],
@@ -36,6 +38,7 @@ def get_all():
     except Exception as e:
         print('get_all error:', e); return []
 
+
 def get_by_id(complaint_id):
     try:
         df = pd.read_csv(FEEDBACK_FILE, dtype=str)
@@ -44,6 +47,7 @@ def get_by_id(complaint_id):
         return row.fillna('').to_dict('records')[0]
     except Exception as e:
         print('get_by_id error:', e); return None
+
 
 def save_feedback(data):
     try:
@@ -60,6 +64,7 @@ def save_feedback(data):
     except Exception as e:
         print('save_feedback error:', e); return 'MB-ERR'
 
+
 def update_status(complaint_id, new_status):
     try:
         df = pd.read_csv(FEEDBACK_FILE, dtype=str)
@@ -68,6 +73,7 @@ def update_status(complaint_id, new_status):
         return True
     except Exception as e:
         print('update_status error:', e); return False
+
 
 def save_note(complaint_id, note, admin='Admin'):
     try:
@@ -78,6 +84,7 @@ def save_note(complaint_id, note, admin='Admin'):
     except Exception as e:
         print('save_note error:', e); return False
 
+
 def get_notes(complaint_id):
     try:
         df = pd.read_csv(NOTES_FILE, dtype=str)
@@ -85,6 +92,7 @@ def get_notes(complaint_id):
         return rows
     except:
         return []
+
 
 def get_stats():
     records = get_all()
@@ -99,6 +107,7 @@ def get_stats():
         rt= r.get('route','Unknown');    routes[rt]   = routes.get(rt,0)+1
     return {'total':total,'pending':pending,'complete':complete,
             'on_hold':on_hold,'emotions':emotions,'qualities':qualities,'routes':routes}
+
 
 def get_route_scores():
     records = get_all()
@@ -133,66 +142,26 @@ def get_route_scores():
     scores.sort(key=lambda x: x['score'], reverse=True)
     return scores
 
+
 def merge_csv(filepath):
-    """Optimized merge: batch inserts, single write, no row-by-row concat."""
     try:
-        # Read uploaded file (support CSV + XLSX)
-        if filepath.endswith('.xlsx'):
-            uploaded = pd.read_excel(filepath, dtype=str)
-        else:
-            uploaded = pd.read_csv(filepath, dtype=str, encoding='utf-8', on_bad_lines='skip')
-        
-        uploaded.columns = [str(c).lower().strip().replace('\ufeff','') for c in uploaded.columns]
-        
-        # Read existing feedback once
-        if not os.path.exists(FEEDBACK_FILE):
-            init_csv()
+        uploaded = pd.read_csv(filepath, dtype=str)
+        uploaded.columns = [c.lower().strip() for c in uploaded.columns]
         existing = pd.read_csv(FEEDBACK_FILE, dtype=str)
-        next_id = len(existing) + 1
-
-        def get_val(row, aliases, default=''):
-            """Extract value from row using column aliases."""
-            for a in aliases:
-                if a in row.index and pd.notna(row[a]) and str(row[a]).strip().lower() not in ('nan',''):
-                    return str(row[a]).strip()
-            return default
-
-        # Map column aliases
-        feedback_aliases = ['feedback', 'description', 'comment', 'text', 'message']
-        name_aliases     = ['name', 'full_name', 'passenger', 'customer']
-        cnic_aliases     = ['cnic', 'id_number', 'nic']
-        route_aliases    = ['route', 'route_no', 'route_number']
-        emotion_aliases  = ['emotion', 'emotional', 'mood']
-        sentiment_aliases= ['sentiment']
-        quality_aliases  = ['quality']
-        status_aliases   = ['status']
-        date_aliases     = ['date', 'timestamp', 'created_at']
-
-        # Build list of new rows (batch instead of concat per row)
-        new_rows = []
+        count = 0
         for _, row in uploaded.iterrows():
-            text = get_val(row, feedback_aliases, '')
-            if text:  # Only if non-empty feedback
-                new_row = {
-                    'id': 'MB-' + str(next_id + len(new_rows)).zfill(4),
-                    'name': get_val(row, name_aliases, 'Unknown'),
-                    'cnic': get_val(row, cnic_aliases, '-'),
-                    'route': get_val(row, route_aliases, 'Unknown'),
-                    'feedback': text,
-                    'emotion': get_val(row, emotion_aliases, 'Neutral'),
-                    'sentiment': get_val(row, sentiment_aliases, 'Neutral'),
-                    'quality': get_val(row, quality_aliases, 'Average'),
-                    'status': get_val(row, status_aliases, 'Pending'),
-                    'date': get_val(row, date_aliases, datetime.now().strftime('%Y-%m-%d'))
-                }
-                new_rows.append(new_row)
-
-        # Single concat + write instead of per-row concat
-        if new_rows:
-            existing = pd.concat([existing, pd.DataFrame(new_rows)], ignore_index=True)
-            existing.to_csv(FEEDBACK_FILE, index=False, encoding='utf-8')
-        
-        return len(new_rows)
+            text = str(row.get('feedback', row.get('description','')))
+            if text and text.lower() != 'nan':
+                new_id = 'MB-' + str(len(existing)+count+1).zfill(4)
+                new_row = {'id':new_id,'name':row.get('name','Unknown'),
+                           'cnic':row.get('cnic','-'),'route':row.get('route','Unknown'),
+                           'feedback':text,'emotion':row.get('emotion','Neutral'),
+                           'sentiment':row.get('sentiment','Neutral'),'quality':row.get('quality','Average'),
+                           'status':row.get('status','Pending'),
+                           'date':row.get('date',datetime.now().strftime('%Y-%m-%d'))}
+                existing = pd.concat([existing, pd.DataFrame([new_row])], ignore_index=True)
+                count += 1
+        existing.to_csv(FEEDBACK_FILE, index=False, encoding='utf-8')
+        return count
     except Exception as e:
-        print('merge_csv error:', e)
-        return 0
+        print('merge_csv error:', e); return 0

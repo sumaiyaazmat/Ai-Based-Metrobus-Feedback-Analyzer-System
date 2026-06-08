@@ -1,0 +1,101 @@
+id,name,cnic,route,feedback,emotion,sentiment,quality,status,date
+MB-0101,Ahmad Raza,35202-1234567-1,R10,Bus was extremely late today and the driver was very rude to passengers. Totally unacceptable.,Angry,Negative,Bad,Pending,2025-01-01
+MB-0102,Sara Iqbal,35202-7654321-2,R12,Great service today! Bus was clean and arrived right on time. Very happy.,Happy,Positive,Excellent,Complete,2025-01-01
+MB-0103,Usman Ali,35202-1111111-3,R15,Bus was overcrowded and AC was not working. Stood for 45 minutes. Very frustrated.,Frustrated,Negative,Bad,Pending,2025-01-02
+MB-0104,Fatima Khan,35202-2222222-4,R10,Service is average nothing special but acceptable for daily commute.,Neutral,Neutral,Average,On Hold,2025-01-02
+MB-0105,Bilal Hussain,35202-3333333-5,R20,Amazing experience today! Staff was helpful and bus was very comfortable.,Happy,Positive,Excellent,Complete,2025-01-03
+MB-0106,Zara Sheikh,35202-4444444-6,R25,Driver missed my stop and was not cooperative at all. Very rude behavior.,Angry,Negative,Bad,Pending,2025-01-03
+MB-0107,Hassan Malik,35202-5555555-7,R12,Bus timings have improved recently. Satisfied with the changes made.,Satisfied,Positive,Average,Complete,2025-01-04
+MB-0108,Nadia Arif,35202-6666666-8,R10,The bus was dirty inside and seats were broken. Very uncomfortable journey.,Frustrated,Negative,Bad,Pending,2025-01-04
+MB-0109,Kamran Shah,35202-7777777-9,R15,Excellent punctuality today. Driver was polite and helpful. Great experience.,Happy,Positive,Excellent,Complete,2025-01-05
+MB-0110,Amina Butt,35202-8888888-0,R20,Bus arrived 30 minutes late. No announcement or update given to passengers.,Frustrated,Negative,Bad,Pending,2025-01-05
+MB-0111,Tariq Mahmood,35202-9999999-1,R25,Good service overall. Bus was clean and driver was professional.,Satisfied,Positive,Average,Complete,2025-01-06
+MB-0112,Rabia Siddiqui,35202-1234512-2,R10,The bus was so crowded I could not breathe. Need more buses on this route.,Frustrated,Negative,Bad,Pending,2025-01-06
+MB-0113,Imran Khan,35202-2345623-3,R12,Wonderful journey today. Air conditioning was perfect and seats were comfortable.,Happy,Positive,Excellent,Complete,2025-01-07
+MB-0114,Hira Nawaz,35202-3456734-4,R15,Driver was speeding dangerously and ignored passenger safety completely.,Angry,Negative,Bad,On Hold,2025-01-07
+MB-0115,Asad Javed,35202-4567845-5,R20,Average service. Nothing to complain about but nothing impressive either.,Neutral,Neutral,Average,Complete,2025-01-08
+MB-0116,Sana Mirza,35202-5678956-6,R25,Bus conductor was very rude and disrespectful to elderly passengers.,Angry,Negative,Bad,Pending,2025-01-08
+MB-0117,Farhan Ahmed,35202-6789067-7,R10,Very good experience today. Bus was on time and journey was smooth.,Happy,Positive,Excellent,Complete,2025-01-09
+MB-0118,Mehwish Tariq,35202-7890178-8,R12,Bus broke down in middle of route. Had to wait 1 hour for replacement. Terrible.,Angry,Negative,Bad,Pending,2025-01-09
+MB-0119,Danish Qureshi,35202-8901289-9,R15,Service has improved a lot this month. Very satisfied with recent changes.,Satisfied,Positive,Average,Complete,2025-01-10
+MB-0120,Ayesha Khalid,35202-9012390-0,R20,Bus was late by 20 minutes again. This happens every single day on this route.,Frustrated,Negative,Bad,Pending,2025-01-10
+MB-0121,Shahid Rana,35202-1122334-1,R25,Excellent service! Driver was courteous and bus was spotlessly clean today.,Happy,Positive,Excellent,Complete,2025-01-11
+MB-0122,Samina Aziz,35202-2233445-2,R10,No seats available and bus was extremely hot inside. Very bad experience.,Frustrated,Negative,Bad,Pending,2025-01-11
+MB-0123,Waqar Hussain,35202-3344556-3,R12,Journey was comfortable and bus arrived exactly on schedule. Good service.,Satisfied,Positive,Average,Complete,2025-01-12
+MB-0124,Lubna Riaz,35202-4455667-4,R15,Driver was talking on phone while driving. Very dangerous and irresponsible.,Angry,Negative,Bad,On Hold,2025-01-12
+MB-0125,Naveed Akhtar,35202-5566778-5,R20,Bus was clean and well maintained today. Staff was cooperative and friendly.,Happy,Positive,Excellent,Complete,2025-01-13
+MB-0126,Faisal Mehmood,35202-6677889-6,R25,Horrible service today. Bus was 45 minutes late with no explanation given.,Angry,Negative,Bad,Pending,2025-01-13
+MB-0127,Uzma Jabeen,35202-7788990-7,R10,Service is getting better gradually. Satisfied with improvements being made.,Satisfied,Positive,Average,Complete,2025-01-14
+MB-0128,Adnan Shafiq,35202-8899001-8,R12,Bus was overcrowded during rush hour. Need more frequency on this route urgently.,Frustrated,Negative,Bad,Pending,2025-01-14
+MB-0129,Kiran Yousaf,35202-9900112-9,R15,Fantastic experience! Clean bus comfortable seats and very punctual service.,Happy,Positive,Excellent,Complete,2025-01-15
+MB-0130,Shahzad Ali,35202-1011223-0,R20,Driver refused to stop at designated bus stop. Very inconvenient and wrong.,Angry,Negative,Bad,Pending,2025-01-15
+MB-0131,Nosheen Fatima,35202-2122334-1,R25,Normal service today. Bus was okay nothing exceptional about the journey.,Neutral,Neutral,Average,Complete,2025-01-16
+MB-0132,Rizwan Haider,35202-3233445-2,R10,AC was not working properly in extreme heat. Very uncomfortable journey today.,Frustrated,Negative,Bad,Pending,2025-01-16
+MB-0133,Mariam Sohail,35202-4344556-3,R12,Really impressed with the service quality today. Driver was very professional.,Happy,Positive,Excellent,Complete,2025-01-17
+MB-0134,Waseem Baig,35202-5455667-4,R15,Bus was late and when it arrived it was completely full. Missed my appointment.,Angry,Negative,Bad,On Hold,2025-01-17
+MB-0135,Tahira Naz,35202-6566778-5,R20,Decent service today. Bus was on time and journey was fairly comfortable.,Satisfied,Positive,Average,Complete,2025-01-18
+MB-0136,Khalid Mehmood,35202-7677889-6,R25,Staff was extremely rude to passengers asking about route information.,Angry,Negative,Bad,Pending,2025-01-18
+MB-0137,Sobia Anwar,35202-8788990-7,R10,Very smooth and pleasant journey today. Highly satisfied with the service.,Happy,Positive,Excellent,Complete,2025-01-19
+MB-0138,Junaid Raza,35202-9899001-8,R12,Bus was dirty and smelled bad throughout the journey. Very unpleasant.,Frustrated,Negative,Bad,Pending,2025-01-19
+MB-0139,Asma Chaudhry,35202-0910112-9,R15,Service is acceptable. Not great but not terrible. Room for improvement.,Neutral,Neutral,Average,Complete,2025-01-20
+MB-0140,Hamid Sheikh,35202-1021223-0,R20,Driver was excellent today. Very careful and considerate towards all passengers.,Happy,Positive,Excellent,Complete,2025-01-20
+MB-0141,Rukhsana Bibi,35202-2132334-1,R25,Bus did not come for 1 hour. Had to take rickshaw. Very poor service today.,Angry,Negative,Bad,Pending,2025-01-21
+MB-0142,Mudassar Ijaz,35202-3243445-2,R10,Quite good service this week. Buses have been mostly on time. Well done.,Satisfied,Positive,Average,Complete,2025-01-21
+MB-0143,Parveen Akhtar,35202-4354556-3,R12,Seats were broken and windows could not be opened. Very uncomfortable ride.,Frustrated,Negative,Bad,Pending,2025-01-22
+MB-0144,Zulfiqar Ali,35202-5465667-4,R15,Absolutely wonderful service today! Clean comfortable and perfectly on time.,Happy,Positive,Excellent,Complete,2025-01-22
+MB-0145,Nasreen Begum,35202-6576778-5,R20,Driver was using mobile phone while driving. Reported to conductor but no action.,Angry,Negative,Bad,On Hold,2025-01-23
+MB-0146,Irfan Gillani,35202-7687889-6,R25,Reasonable service today. Bus came on time and journey was comfortable.,Satisfied,Positive,Average,Complete,2025-01-23
+MB-0147,Shaista Waheed,35202-8798990-7,R10,Very crowded bus again today. Cannot continue using this service like this.,Frustrated,Negative,Bad,Pending,2025-01-24
+MB-0148,Yasir Pervaiz,35202-9809001-8,R12,Great improvement in service quality this month. Very happy with changes.,Happy,Positive,Excellent,Complete,2025-01-24
+MB-0149,Ghazala Rashid,35202-0910112-0,R15,Bus skipped two stops without stopping. Many passengers were left stranded.,Angry,Negative,Bad,Pending,2025-01-25
+MB-0150,Naeem Ullah,35202-1021223-1,R20,Service is okay. Not much to complain about today. Acceptable experience.,Neutral,Neutral,Average,Complete,2025-01-25
+MB-0151,Saira Bashir,35202-2132334-2,R25,Extremely happy with service today! Bus was clean fast and driver was great.,Happy,Positive,Excellent,Complete,2025-01-26
+MB-0152,Amir Zaman,35202-3243445-3,R10,Bus conductor was disrespectful and did not give change back to passengers.,Angry,Negative,Bad,Pending,2025-01-26
+MB-0153,Bushra Qadir,35202-4354556-4,R12,Journey was smooth and pleasant today. Good service by the bus team.,Satisfied,Positive,Average,Complete,2025-01-27
+MB-0154,Tariq Saleem,35202-5465667-5,R15,Air conditioning was too cold and driver ignored complaints from passengers.,Frustrated,Negative,Bad,Pending,2025-01-27
+MB-0155,Zahida Parveen,35202-6576778-6,R20,Superb service today! Very impressed with the cleanliness and punctuality.,Happy,Positive,Excellent,Complete,2025-01-28
+MB-0156,Shoaib Anwar,35202-7687889-7,R25,Bus arrived late again. Third time this week. Very unreliable service.,Angry,Negative,Bad,On Hold,2025-01-28
+MB-0157,Fareeha Malik,35202-8798990-8,R10,Average journey today. Bus came on time but was slightly crowded inside.,Neutral,Neutral,Average,Complete,2025-01-29
+MB-0158,Owais Hassan,35202-9809001-9,R12,Excellent service! Driver helped elderly passenger with luggage. Wonderful.,Happy,Positive,Excellent,Complete,2025-01-29
+MB-0159,Tehmina Arif,35202-0910112-1,R15,Bus seats were very dirty and floor was not cleaned. Hygiene is very poor.,Frustrated,Negative,Bad,Pending,2025-01-30
+MB-0160,Salman Butt,35202-1021223-2,R20,Service has been consistently good this month. Very satisfied overall.,Satisfied,Positive,Average,Complete,2025-01-30
+MB-0161,Rida Fatima,35202-2132334-3,R25,Driver was extremely rude and used bad language with female passengers.,Angry,Negative,Bad,Pending,2025-01-31
+MB-0162,Ahsan Riaz,35202-3243445-4,R10,Very nice experience today. Bus was on time and seats were comfortable.,Happy,Positive,Excellent,Complete,2025-01-31
+MB-0163,Mehreen Zafar,35202-4354556-5,R12,Bus broke down midway. Had to wait 40 minutes for another bus. Very frustrating.,Frustrated,Negative,Bad,Pending,2025-02-01
+MB-0164,Babar Nawaz,35202-5465667-6,R15,Journey was fine today. Nothing special but comfortable enough for commute.,Neutral,Neutral,Average,Complete,2025-02-01
+MB-0165,Shazia Iqbal,35202-6576778-7,R20,Fantastic service! Bus was spotlessly clean and arrived 5 minutes early today.,Happy,Positive,Excellent,Complete,2025-02-02
+MB-0166,Mubashir Ahmed,35202-7687889-8,R25,Conductor overcharged me and refused to correct it. Very dishonest behavior.,Angry,Negative,Bad,Pending,2025-02-02
+MB-0167,Amna Shaheen,35202-8798990-9,R10,Good service today. Bus timing has improved significantly this week.,Satisfied,Positive,Average,Complete,2025-02-03
+MB-0168,Umar Farooq,35202-9809001-0,R12,Bus was so overcrowded that I had to stand the entire 45 minute journey.,Frustrated,Negative,Bad,Pending,2025-02-03
+MB-0169,Huma Shafique,35202-0920112-1,R15,Lovely journey today! Driver was cheerful and bus was very well maintained.,Happy,Positive,Excellent,Complete,2025-02-04
+MB-0170,Sohaib Karimi,35202-1031223-2,R20,Bus windows were broken and it was very cold inside during morning commute.,Frustrated,Negative,Bad,On Hold,2025-02-04
+MB-0171,Zainab Hussain,35202-2142334-3,R25,Acceptable service today. Buses running on schedule for a change. Good.,Neutral,Neutral,Average,Complete,2025-02-05
+MB-0172,Khurram Shahzad,35202-3253445-4,R10,Absolutely horrible. Driver ignored red signal. Lives were put at serious risk.,Angry,Negative,Bad,Pending,2025-02-05
+MB-0173,Nida Pervaiz,35202-4364556-5,R12,Very impressed today. Bus was clean and all passengers got comfortable seats.,Happy,Positive,Excellent,Complete,2025-02-06
+MB-0174,Sikander Hayat,35202-5475667-6,R15,Bus did not stop at our stop today. Driver drove past without slowing down.,Angry,Negative,Bad,Pending,2025-02-06
+MB-0175,Fauzia Rehman,35202-6586778-7,R20,Service is getting much better. Very satisfied with the improvements made.,Satisfied,Positive,Average,Complete,2025-02-07
+MB-0176,Nadir Hussain,35202-7697889-8,R25,Music was blasting loudly in the bus making it unbearable for passengers.,Frustrated,Negative,Bad,Pending,2025-02-07
+MB-0177,Samra Lodhi,35202-8708990-9,R10,Perfect service today! Punctual clean comfortable and staff were very polite.,Happy,Positive,Excellent,Complete,2025-02-08
+MB-0178,Rashid Mehmood,35202-9819001-0,R12,Bus stopped working air conditioning mid journey in very hot weather today.,Frustrated,Negative,Bad,Pending,2025-02-08
+MB-0179,Tabassum Ali,35202-0920112-2,R15,Ordinary journey today. Bus was on time. No major issues to report at all.,Neutral,Neutral,Average,Complete,2025-02-09
+MB-0180,Shaheen Nawaz,35202-1031223-3,R20,Great service! Very happy with the route changes. Makes my commute easier.,Happy,Positive,Excellent,Complete,2025-02-09
+MB-0181,Aamir Yousaf,35202-2142334-4,R25,Driver was texting while driving. Extremely dangerous behavior on busy road.,Angry,Negative,Bad,On Hold,2025-02-10
+MB-0182,Gulshan Fatima,35202-3253445-5,R10,Service is improving gradually. Satisfied with the progress being made.,Satisfied,Positive,Average,Complete,2025-02-10
+MB-0183,Tanveer Abbas,35202-4364556-6,R12,Bus seats were torn and sharp edges hurt passengers. Needs urgent maintenance.,Frustrated,Negative,Bad,Pending,2025-02-11
+MB-0184,Madiha Saleem,35202-5475667-7,R15,Wonderful trip today! Staff went out of their way to help disabled passenger.,Happy,Positive,Excellent,Complete,2025-02-11
+MB-0185,Fawad Chaudhry,35202-6586778-8,R20,Conductor was rude and disrespectful when asked for route information.,Angry,Negative,Bad,Pending,2025-02-12
+MB-0186,Shabana Aslam,35202-7697889-9,R25,Good experience today. Bus arrived on time and route was covered properly.,Satisfied,Positive,Average,Complete,2025-02-12
+MB-0187,Aslam Khan,35202-8708990-0,R10,Bus was very delayed due to breakdown. Company should maintain buses better.,Frustrated,Negative,Bad,Pending,2025-02-13
+MB-0188,Saadia Baig,35202-9819001-1,R12,Outstanding service today! Everything was perfect. Please keep it up always.,Happy,Positive,Excellent,Complete,2025-02-13
+MB-0189,Pervez Elahi,35202-0930112-2,R15,Bus was dirty and smelly. Hygiene standards are seriously lacking on this route.,Frustrated,Negative,Bad,Pending,2025-02-14
+MB-0190,Sumaira Malik,35202-1041223-3,R20,Normal journey. Bus came on time. Driver was okay. Nothing special today.,Neutral,Neutral,Average,Complete,2025-02-14
+MB-0191,Zahid Anwar,35202-2152334-4,R25,Driver was very experienced and careful. Made me feel completely safe.,Happy,Positive,Excellent,Complete,2025-02-15
+MB-0192,Munira Shafiq,35202-3263445-5,R10,Bus was dangerously overloaded. Felt very unsafe throughout the journey.,Angry,Negative,Bad,Pending,2025-02-15
+MB-0193,Tayyab Raza,35202-4374556-6,R12,Service has improved a lot. Quite satisfied with the current state of things.,Satisfied,Positive,Average,Complete,2025-02-16
+MB-0194,Nargis Begum,35202-5485667-7,R15,No bus came for over 90 minutes. Complete breakdown of service on this route.,Angry,Negative,Bad,On Hold,2025-02-16
+MB-0195,Shahbaz Ahmed,35202-6596778-8,R20,Very happy with today service. Clean bus polite staff and excellent timing.,Happy,Positive,Excellent,Complete,2025-02-17
+MB-0196,Fozia Kausar,35202-7607889-9,R25,Bus conductor charged wrong fare and argued badly when corrected by passenger.,Angry,Negative,Bad,Pending,2025-02-17
+MB-0197,Nadeem Iqbal,35202-8718990-0,R10,Decent service today. Bus was on time and the route was covered well.,Satisfied,Positive,Average,Complete,2025-02-18
+MB-0198,Urooj Fatima,35202-9829001-1,R12,Bus was filthy inside. Garbage on seats and floor. Very unhygienic condition.,Frustrated,Negative,Bad,Pending,2025-02-18
+MB-0199,Kamil Hassan,35202-0930112-3,R15,Exceptional service today! Friendly staff clean bus and perfectly on time.,Happy,Positive,Excellent,Complete,2025-02-19
+MB-0200,Rubina Shoukat,35202-1041223-4,R20,Bus arrived late and left before scheduled time. Many passengers were left.,Angry,Negative,Bad,Pending,2025-02-19
