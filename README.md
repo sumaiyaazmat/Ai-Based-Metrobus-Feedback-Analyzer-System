@@ -63,3 +63,41 @@ A modern, full-stack AI platform designed for the Punjab Mass Transit Authority 
 ├── requirements.txt      # Project dependencies and libraries
 ├── routes.jpeg           # Screenshot: Route performance ranking table
 └── run.py                # Main script to execute the application
+
+```
+🛠️ Libraries & Technologies Used
+Language: Python 3.x
+
+Web Framework: Flask
+
+Machine Learning & NLP: Scikit-Learn, NLTK / Pandas, NumPy
+
+Data Handling: Pandas
+
+Frontend: HTML5, CSS3, JavaScript, Bootstrap
+
+🚀 How to Run the Project
+1️⃣ Clone the Repository
+Bash
+
+
+git clone [https://github.com/your-username/Ai-Based-Metrobus-Feedback-Analyzer-System.git](https://github.com/your-username/Ai-Based-Metrobus-Feedback-Analyzer-System.git)
+cd Ai-Based-Metrobus-Feedback-Analyzer-System
+2️⃣ Install Required Libraries
+Bash
+
+
+pip install -r requirements.txt
+3️⃣ Start the Application
+To run the project, execute the run.py file:
+
+Bash
+
+
+python run.py
+After executing, open your web browser and navigate to:
+
+Plaintext
+
+
+[http://127.0.0.1:5000/](http://127.0.0.1:5000/)
