@@ -2,11 +2,12 @@
 
 A modern, full-stack AI platform designed for the Punjab Mass Transit Authority to analyze passenger feedback, evaluate route performance, and process public complaints in real time using NLP and Machine Learning.
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![Framework](https://img.shields.io/badge/Framework-Flask-black.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Status](https://img.shields.io/badge/Status-Complete-brightgreen.svg)
-
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" height="28">&nbsp;
+  <img src="https://img.shields.io/badge/Framework-Flask-black.svg" height="28">&nbsp;
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" height="28">&nbsp;
+  <img src="https://img.shields.io/badge/Status-Complete-brightgreen.svg" height="28">
+</p>
 *A smart feedback portal and AI-driven admin analytics system for public transport service optimization.*
 
 ---
