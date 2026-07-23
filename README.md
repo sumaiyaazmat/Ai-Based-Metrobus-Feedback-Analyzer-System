@@ -1,14 +1,19 @@
-# 🚌 AI-Based Metrobus Feedback Analyzer System
-
-A modern, full-stack AI platform designed for the Punjab Mass Transit Authority to analyze passenger feedback, evaluate route performance, and process public complaints in real time using NLP and Machine Learning.
+<h1 align="center">🚌 AI-Based Metrobus Feedback Analyzer System</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" height="28">&nbsp;
-  <img src="https://img.shields.io/badge/Framework-Flask-black.svg" height="28">&nbsp;
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" height="28">&nbsp;
-  <img src="https://img.shields.io/badge/Status-Complete-brightgreen.svg" height="28">
+  <b>A modern, full-stack AI platform designed for the Punjab Mass Transit Authority to analyze passenger feedback, evaluate route performance, and process public complaints in real time using NLP and Machine Learning.</b>
 </p>
-*A smart feedback portal and AI-driven admin analytics system for public transport service optimization.*
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python&logoColor=white" height="35">&nbsp;
+  <img src="https://img.shields.io/badge/Framework-Flask-black?style=for-the-badge&logo=flask&logoColor=white" height="35">&nbsp;
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" height="35">&nbsp;
+  <img src="https://img.shields.io/badge/Status-Complete-brightgreen?style=for-the-badge" height="35">
+</p>
+
+<p align="center">
+  <i>A smart feedback portal and AI-driven admin analytics system for public transport service optimization.</i>
+</p>
 
 ---
 
@@ -64,7 +69,6 @@ A modern, full-stack AI platform designed for the Punjab Mass Transit Authority 
 ├── requirements.txt      # Project dependencies and libraries
 ├── routes.jpeg           # Screenshot: Route performance ranking table
 └── run.py                # Main script to execute the application
-
 ```
 ## 🛠️ Libraries & Technologies Used
 
