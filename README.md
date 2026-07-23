@@ -70,34 +70,40 @@ Language: Python 3.x
 
 Web Framework: Flask
 
-Machine Learning & NLP: Scikit-Learn, NLTK / Pandas, NumPy
+Machine Learning & NLP: Scikit-Learn, NLTK
 
-Data Handling: Pandas
+Data Handling: Pandas, NumPy
 
 Frontend: HTML5, CSS3, JavaScript, Bootstrap
 
 🚀 How to Run the Project
-1️⃣ Clone the Repository
-Bash
+Option 1: Direct Run (Easiest Method)
+Simply double-click on the run.py file inside the project folder to start the application.
+
+Option 2: Running via Terminal / Command Prompt
+Clone the Repository:
+```Bash
 
 
 git clone [https://github.com/your-username/Ai-Based-Metrobus-Feedback-Analyzer-System.git](https://github.com/your-username/Ai-Based-Metrobus-Feedback-Analyzer-System.git)
 cd Ai-Based-Metrobus-Feedback-Analyzer-System
-2️⃣ Install Required Libraries
-Bash
+Install Required Libraries:
+```
+```Bash
 
 
 pip install -r requirements.txt
-3️⃣ Start the Application
-To run the project, execute the run.py file:
+```
+Start the Application:
 
-Bash
+```Bash
 
 
 python run.py
+```
 After executing, open your web browser and navigate to:
+```
+http://127.0.0.1:5000/
+```
 
-Plaintext
 
-
-[http://127.0.0.1:5000/](http://127.0.0.1:5000/)
