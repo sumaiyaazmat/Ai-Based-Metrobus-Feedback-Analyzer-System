@@ -65,7 +65,7 @@ A modern, full-stack AI platform designed for the Punjab Mass Transit Authority 
 └── run.py                # Main script to execute the application
 
 ```
-🛠️ Libraries & Technologies Used
+##🛠️ Libraries & Technologies Used
 Language: Python 3.x
 
 Web Framework: Flask
@@ -74,14 +74,17 @@ Machine Learning & NLP: Scikit-Learn, NLTK
 
 Data Handling: Pandas, NumPy
 
-Frontend: HTML5, CSS3, JavaScript, Bootstrap
+Frontend: HTML5, CSS3, JavaScript
 
 🚀 How to Run the Project
-Option 1: Direct Run (Easiest Method)
+Option 1:
+--Direct Run (Easiest Method)
 Simply double-click on the run.py file inside the project folder to start the application.
 
-Option 2: Running via Terminal / Command Prompt
+Option 2: 
+--Running via Terminal / Command Prompt
 Clone the Repository:
+
 ```Bash
 
 
@@ -102,8 +105,8 @@ Start the Application:
 python run.py
 ```
 After executing, open your web browser and navigate to:
-```
+
 http://127.0.0.1:5000/
-```
+
 
 
